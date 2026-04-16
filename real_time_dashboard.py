@@ -35,12 +35,50 @@ def init_db():
 init_db()
 
 # -----------------------------
-# SIDEBAR
+# DATA
+# -----------------------------
+products = ["Laptop","Mobile","Tablet","Camera","Headphones","Watch"]
+
+# More cities
+cities = [
+    "Chennai", "Mumbai", "Delhi", "Bangalore", "Hyderabad",
+    "Kolkata", "Pune", "Jaipur", "Lucknow", "Indore", "Surat",
+    "Visakhapatnam", "Coimbatore", "Madurai", "Trichy"
+]
+
+weather_types = ["Clear", "Rain", "Clouds", "Heat", "Storm"]
+
+def weather():
+    return random.choice(weather_types)
+
+def sale():
+    return (
+        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        random.choice(products),
+        random.randint(2000, 50000),
+        random.choice(cities),
+        weather()
+    )
+
+# -----------------------------
+# SIDEBAR FILTERS
 # -----------------------------
 st.sidebar.title("📊 Control Panel")
 
-refresh = st.sidebar.slider("Refresh (sec)", 5, 60, 10)
+# Filters
+selected_cities = st.sidebar.multiselect(
+    "Filter by City",
+    options=cities,
+    default=cities
+)
 
+selected_weather = st.sidebar.multiselect(
+    "Filter by Weather",
+    options=weather_types,
+    default=weather_types
+)
+
+refresh = st.sidebar.slider("Refresh (sec)", 5, 60, 10)
 st_autorefresh(interval=refresh * 1000, key="auto")
 
 # -----------------------------
@@ -50,35 +88,22 @@ def load_data():
     return pd.read_sql("SELECT * FROM sales", conn)
 
 # -----------------------------
-# DATA
-# -----------------------------
-products = ["Laptop","Mobile","Tablet","Camera","Headphones","Watch"]
-cities = ["Chennai","Mumbai","Delhi","Bangalore","Hyderabad"]
-
-def weather():
-    return random.choice(["Clear","Rain","Clouds","Heat"])
-
-def sale():
-    return (
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        random.choice(products),
-        random.randint(2000,50000),
-        random.choice(cities),
-        weather()
-    )
-
-# -----------------------------
 # REVENUE
 # -----------------------------
 st.title("📊 Revenue Dashboard PRO")
 
-# Add one dummy sale every refresh
+# Insert one dummy sale every refresh
 cursor.execute("INSERT INTO sales VALUES (?,?,?,?,?)", sale())
 conn.commit()
 
 df = load_data()
 
 if not df.empty:
+    # Apply filters
+    if selected_cities:
+        df = df[df["city"].isin(selected_cities)]
+    if selected_weather:
+        df = df[df["weather"].isin(selected_weather)]
 
     col1, col2, col3, col4 = st.columns(4)
 
@@ -92,10 +117,26 @@ if not df.empty:
     c1, c2 = st.columns(2)
 
     with c1:
-        st.plotly_chart(px.bar(df, x="city", y="price", color="city"), use_container_width=True)
+        st.plotly_chart(
+            px.bar(
+                df,
+                x="city",
+                y="price",
+                color="city",
+                title="Sales by City"
+            ),
+            use_container_width=True
+        )
 
     with c2:
-        st.plotly_chart(px.pie(df, names="product"), use_container_width=True)
+        st.plotly_chart(
+            px.pie(
+                df,
+                names="product",
+                title="Sales by Product"
+            ),
+            use_container_width=True
+        )
 
     st.subheader("Live Data")
     st.dataframe(df.tail(10), use_container_width=True)
