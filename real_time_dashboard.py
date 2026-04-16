@@ -1,90 +1,66 @@
 import streamlit as st
 import pandas as pd
-import random
+import numpy as np
 import sqlite3
-import plotly.express as px
-import plotly.graph_objects as go
+import random
 from datetime import datetime
+import plotly.express as px
 from streamlit_autorefresh import st_autorefresh
+from sklearn.linear_model import LinearRegression
 
 # -----------------------------
 # CONFIG
 # -----------------------------
-st.set_page_config(page_title="Enterprise Command Center PRO", layout="wide")
+st.set_page_config(page_title="Enterprise AI Dashboard", layout="wide")
 
 # -----------------------------
-# SOLID PROFESSIONAL UI (NO TRANSPARENCY)
+# CSS (NO PURPLE + KPI ANIMATION)
 # -----------------------------
 st.markdown("""
 <style>
+.stApp { background-color: #f4f6f9; }
 
-/* Global */
-.stApp {
-    background-color: #f5f7fa;
-    font-family: Arial;
+/* KPI animation */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+  100% { transform: scale(1); }
 }
 
-/* Title */
-h1 {
-    color: #000000 !important;
-    font-weight: 900 !important;
-}
-
-/* KPI Cards */
 [data-testid="stMetric"] {
-    padding: 18px !important;
-    border-radius: 14px !important;
-    font-weight: bold !important;
-    box-shadow: 0px 4px 12px rgba(0,0,0,0.08);
+    animation: pulse 2s infinite;
+    border-radius: 12px;
+    padding: 15px;
+    font-weight: bold;
 }
 
-/* KPI COLORS */
-[data-testid="stMetric"]:nth-child(1) {
-    background: linear-gradient(135deg, #ff6b6b, #ff4757);
-    color: white !important;
-}
-[data-testid="stMetric"]:nth-child(2) {
-    background: linear-gradient(135deg, #1dd1a1, #10ac84);
-}
-[data-testid="stMetric"]:nth-child(3) {
-    background: linear-gradient(135deg, #feca57, #ff9f43);
-}
-[data-testid="stMetric"]:nth-child(4) {
-    background: linear-gradient(135deg, #5f27cd, #341f97);
-    color: white !important;
-}
+/* KPI colors */
+[data-testid="stMetric"]:nth-child(1) { background: #ff6b6b; color: white; }
+[data-testid="stMetric"]:nth-child(2) { background: #1dd1a1; }
+[data-testid="stMetric"]:nth-child(3) { background: #feca57; }
+[data-testid="stMetric"]:nth-child(4) { background: #54a0ff; color: white; }
 
-/* Metric text */
-[data-testid="stMetricValue"] {
-    font-size: 30px !important;
-    font-weight: 900 !important;
-}
-
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background-color: #2f3640 !important;
-    color: white !important;
-}
-
-/* Table */
-[data-testid="stDataFrame"] {
-    background: white !important;
-    border-radius: 10px;
-}
-
+h1 { color: black; font-weight: 900; }
 </style>
 """, unsafe_allow_html=True)
 
 # -----------------------------
 # DATABASE
 # -----------------------------
-conn = sqlite3.connect("enterprise.db", check_same_thread=False)
+conn = sqlite3.connect("enterprise_ai.db", check_same_thread=False)
 cursor = conn.cursor()
+
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS users(
+    username TEXT,
+    password TEXT,
+    role TEXT
+)
+""")
 
 cursor.execute("""
 CREATE TABLE IF NOT EXISTS sales(
     time TEXT,
-    product TEXT,
     price INTEGER,
     city TEXT
 )
@@ -92,127 +68,117 @@ CREATE TABLE IF NOT EXISTS sales(
 conn.commit()
 
 # -----------------------------
+# DEFAULT USERS
+# -----------------------------
+if cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
+    users = [
+        ("admin","admin123","Admin"),
+        ("manager","manager123","Manager")
+    ]
+    cursor.executemany("INSERT INTO users VALUES (?,?,?)", users)
+    conn.commit()
+
+# -----------------------------
+# LOGIN SYSTEM
+# -----------------------------
+if "login" not in st.session_state:
+    st.session_state.login = False
+
+if not st.session_state.login:
+    st.title("🔐 Login")
+
+    u = st.text_input("Username")
+    p = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        user = cursor.execute("SELECT * FROM users WHERE username=?",(u,)).fetchone()
+        if user and p == user[1]:
+            st.session_state.login = True
+            st.session_state.role = user[2]
+            st.rerun()
+        else:
+            st.error("Invalid")
+
+    st.stop()
+
+# -----------------------------
+# SIDEBAR
+# -----------------------------
+st.sidebar.success(f"Role: {st.session_state.role}")
+refresh = st.sidebar.slider("Refresh",5,60,10)
+st_autorefresh(interval=refresh*1000)
+
+# -----------------------------
 # DATA GENERATION
 # -----------------------------
-products = ["Laptop","Mobile","Tablet","Camera","Headphones","Watch"]
-cities = ["Chennai","Mumbai","Delhi","Bangalore","Hyderabad"]
+cities = ["Chennai","Mumbai","Delhi","Bangalore"]
 
-def generate_sale():
+def generate():
     return (
         datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        random.choice(products),
         random.randint(2000,50000),
         random.choice(cities)
     )
 
-# Insert live data
-cursor.execute("INSERT INTO sales VALUES (?,?,?,?)", generate_sale())
+cursor.execute("INSERT INTO sales VALUES (?,?,?)", generate())
 conn.commit()
 
 df = pd.read_sql("SELECT * FROM sales", conn)
 df["time"] = pd.to_datetime(df["time"])
 
 # -----------------------------
-# SIDEBAR
+# KPI
 # -----------------------------
-st.sidebar.title("⚙️ Control Panel")
-
-refresh = st.sidebar.slider("Refresh Speed (sec)", 5, 60, 10)
-st_autorefresh(interval=refresh * 1000)
-
-city_filter = st.sidebar.multiselect("Filter City", df["city"].unique())
-if city_filter:
-    df = df[df["city"].isin(city_filter)]
-
-# -----------------------------
-# TITLE
-# -----------------------------
-st.title("🚀 Enterprise Command Center PRO")
-
-# -----------------------------
-# KPI CALCULATIONS
-# -----------------------------
-total_revenue = df["price"].sum()
+total = df["price"].sum()
 orders = len(df)
 avg = int(df["price"].mean())
 cities_count = df["city"].nunique()
 
-# Delta logic
-if "last_rev" not in st.session_state:
-    st.session_state.last_rev = 0
-
-delta = total_revenue - st.session_state.last_rev
-st.session_state.last_rev = total_revenue
-
-# -----------------------------
-# KPI DISPLAY
-# -----------------------------
-c1, c2, c3, c4 = st.columns(4)
-
-c1.metric("💰 Revenue", f"₹{total_revenue:,}", f"{delta:+}")
-c2.metric("📦 Orders", orders)
-c3.metric("📊 Avg Value", f"₹{avg}")
-c4.metric("🌍 Cities", cities_count)
+c1,c2,c3,c4 = st.columns(4)
+c1.metric("Revenue", f"₹{total:,}")
+c2.metric("Orders", orders)
+c3.metric("Avg", f"₹{avg}")
+c4.metric("Cities", cities_count)
 
 st.divider()
 
 # -----------------------------
 # CHARTS
 # -----------------------------
-col1, col2 = st.columns(2)
+col1,col2 = st.columns(2)
 
-# Bar Chart
 with col1:
-    city_data = df.groupby("city")["price"].sum().reset_index()
-    fig = px.bar(
-        city_data,
-        x="city",
-        y="price",
-        color="city",
-        color_discrete_sequence=["#ff6b6b","#1dd1a1","#feca57","#5f27cd","#54a0ff"]
-    )
-    fig.update_layout(title="Revenue by City")
+    fig = px.bar(df, x="city", y="price",
+                 color="city",
+                 color_discrete_sequence=["#ff6b6b","#1dd1a1","#feca57","#54a0ff"])
     st.plotly_chart(fig, use_container_width=True)
 
-# Pie Chart
 with col2:
-    fig2 = px.pie(
-        df,
-        names="product",
-        color_discrete_sequence=["#ff6b6b","#1dd1a1","#feca57","#5f27cd","#54a0ff"]
-    )
-    fig2.update_layout(title="Product Distribution")
+    fig2 = px.line(df, x="time", y="price")
     st.plotly_chart(fig2, use_container_width=True)
 
 # -----------------------------
-# TREND CHART (NEW)
+# AI PREDICTION (ML)
 # -----------------------------
-st.subheader("📈 Revenue Trend")
+st.subheader("🧠 AI Revenue Prediction")
 
-trend = df.set_index("time").resample("1min")["price"].sum().reset_index()
+if len(df) > 5:
+    df["t"] = np.arange(len(df))
+    model = LinearRegression()
+    model.fit(df[["t"]], df["price"])
 
-fig3 = go.Figure()
-fig3.add_trace(go.Scatter(
-    x=trend["time"],
-    y=trend["price"],
-    mode='lines+markers',
-    line=dict(width=3),
-))
+    future = np.array([[len(df)+i] for i in range(5)])
+    pred = model.predict(future)
 
-fig3.update_layout(title="Revenue Over Time")
-st.plotly_chart(fig3, use_container_width=True)
+    st.write("Next 5 predictions:", [int(x) for x in pred])
 
 # -----------------------------
-# LIVE TABLE
+# ROLE BASED VIEW
 # -----------------------------
-st.subheader("🟢 Live Transactions")
-st.dataframe(df.tail(10), use_container_width=True)
+if st.session_state.role == "Admin":
+    st.success("Admin Panel Access")
+    st.dataframe(df)
 
-# -----------------------------
-# EXPORT
-# -----------------------------
-st.download_button(
-    "⬇️ Download Data",
-    data=df.to_csv(index=False),
-    file_name="sales_data.csv"
-)
+elif st.session_state.role == "Manager":
+    st.info("Manager View (limited)")
+    st.dataframe(df.tail(5))
