@@ -3,509 +3,808 @@ import pandas as pd
 import numpy as np
 import random
 import sqlite3
+import requests
 import plotly.express as px
 import plotly.graph_objects as go
-from datetime import datetime, timedelta
+from datetime import datetime
 from streamlit_autorefresh import st_autorefresh
 
-# =========================================================
+# -------------------------------------------------
 # PAGE CONFIG
-# =========================================================
+# -------------------------------------------------
 st.set_page_config(
-    page_title="Enterprise Command Center PRO",
+    page_title="Enterprise Live Revenue Pulse",
     layout="wide",
-    page_icon="📈"
+    page_icon="📊"
 )
 
-# =========================================================
-# PROFESSIONAL UI - NO PURPLE
-# =========================================================
+# -------------------------------------------------
+# POWER BI PROFESSIONAL THEME CSS
+# -------------------------------------------------
 st.markdown("""
 <style>
+/* ─── Google Font ─────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;600;700&display=swap');
+
+/* ─── Root Variables ──────────────────────────── */
+:root {
+    --bg-primary:    #0e1525;
+    --bg-secondary:  #141d30;
+    --bg-card:       #1a2540;
+    --bg-card-hover: #1e2d4d;
+    --border:        rgba(255,255,255,0.07);
+    --text-primary:  #e8edf5;
+    --text-muted:    #8a96b0;
+    --accent-blue:   #4f8ef7;
+    --accent-green:  #00d4aa;
+    --accent-orange: #ff8c42;
+    --accent-purple: #a78bfa;
+    --accent-cyan:   #00c8e0;
+    --accent-amber:  #f5a623;
+    --gradient-rev:  linear-gradient(135deg, #1a3a6b 0%, #0f2444 60%, #0a1a33 100%);
+    --gradient-ord:  linear-gradient(135deg, #0d4f3c 0%, #063328 60%, #041f1a 100%);
+    --gradient-avg:  linear-gradient(135deg, #5a2d00 0%, #3d1e00 60%, #241100 100%);
+}
+
+/* ─── Global App Background ───────────────────── */
 .stApp {
-    background-color: #f4f6f8;
-    font-family: Arial, sans-serif;
+    background: radial-gradient(ellipse at 20% 0%, #1a2a4a 0%, #0e1525 40%, #080e1a 100%);
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text-primary);
 }
 
-h1, h2, h3 {
-    color: #111111 !important;
-    font-weight: 800 !important;
+/* ─── Hide Streamlit Branding ─────────────────── */
+#MainMenu, footer, header { visibility: hidden; }
+
+/* ─── Main Content Padding ────────────────────── */
+.main .block-container {
+    padding: 1.5rem 2.5rem 2rem 2.5rem;
+    max-width: 1600px;
 }
 
-/* Sidebar */
-[data-testid="stSidebar"] {
-    background: #1f2937 !important;
-}
-[data-testid="stSidebar"] * {
-    color: white !important;
-}
-
-/* KPI cards */
-[data-testid="stMetric"] {
-    padding: 18px !important;
-    border-radius: 16px !important;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
-    border: 0 !important;
-}
-
-/* Revenue */
-div[data-testid="column"]:nth-of-type(1) [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #ff6b6b, #ee5253) !important;
-}
-/* Orders */
-div[data-testid="column"]:nth-of-type(2) [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #1dd1a1, #10ac84) !important;
-}
-/* Avg */
-div[data-testid="column"]:nth-of-type(3) [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #feca57, #ff9f43) !important;
-}
-/* Prediction */
-div[data-testid="column"]:nth-of-type(4) [data-testid="stMetric"] {
-    background: linear-gradient(135deg, #54a0ff, #2e86de) !important;
-}
-
-[data-testid="stMetricLabel"],
-[data-testid="stMetricValue"],
-[data-testid="stMetricDelta"] {
-    color: #111111 !important;
-    font-weight: 800 !important;
-}
-
-[data-testid="stMetricValue"] {
-    font-size: 30px !important;
-}
-
-/* Buttons */
-.stButton > button,
-.stDownloadButton > button {
-    background: #111827 !important;
-    color: white !important;
-    border-radius: 10px !important;
-    border: none !important;
+/* ─── Dashboard Title ─────────────────────────── */
+h1 {
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-size: 1.75rem !important;
     font-weight: 700 !important;
-}
-.stButton > button:hover,
-.stDownloadButton > button:hover {
-    background: #0f172a !important;
-    color: white !important;
+    color: var(--text-primary) !important;
+    letter-spacing: -0.5px;
+    padding-bottom: 0.25rem;
+    border-bottom: 2px solid rgba(79,142,247,0.3);
+    margin-bottom: 0.25rem !important;
 }
 
-/* Inputs */
-.stTextInput input, .stSelectbox div[data-baseweb="select"] > div {
+h2, h3 {
+    font-family: 'Space Grotesk', sans-serif !important;
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
+    letter-spacing: 0.3px;
+    margin-bottom: 0.5rem !important;
+}
+
+/* ─── Sidebar ─────────────────────────────────── */
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg, #0d1829 0%, #0e1525 100%) !important;
+    border-right: 1px solid var(--border);
+}
+
+[data-testid="stSidebar"] .block-container {
+    padding: 1.5rem 1rem;
+}
+
+[data-testid="stSidebar"] h1,
+[data-testid="stSidebar"] h2,
+[data-testid="stSidebar"] h3,
+[data-testid="stSidebar"] label,
+[data-testid="stSidebar"] p {
+    color: var(--text-primary) !important;
+    font-family: 'DM Sans', sans-serif !important;
+}
+
+/* Sidebar toggle */
+[data-testid="stSidebar"] [data-testid="stToggle"] {
+    background: rgba(79,142,247,0.12) !important;
+    border: 1px solid rgba(79,142,247,0.3) !important;
+    border-radius: 8px;
+    padding: 0.4rem 0.75rem;
+}
+
+/* ─── CITY FILTER — Teal / Cyan Professional ──── */
+/* Multiselect container */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div {
+    background: rgba(0, 200, 224, 0.06) !important;
+    border: 1px solid rgba(0, 200, 224, 0.35) !important;
     border-radius: 10px !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0px rgba(0,200,224,0.2);
+    transition: box-shadow 0.2s ease;
 }
 
-/* Dataframe */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div:focus-within {
+    box-shadow: 0 0 0 2px rgba(0,200,224,0.3) !important;
+    border-color: rgba(0,200,224,0.6) !important;
+}
+
+/* City tags */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] {
+    background: linear-gradient(135deg, rgba(0,200,224,0.28), rgba(0,180,200,0.18)) !important;
+    border: 1px solid rgba(0, 200, 224, 0.55) !important;
+    border-radius: 6px !important;
+    color: #7ef5ff !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(0,200,224,0.4);
+}
+
+/* City tag close button */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] svg {
+    fill: rgba(0,200,224,0.75) !important;
+}
+
+/* City dropdown items hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) li[aria-selected="false"]:hover {
+    background: rgba(0,200,224,0.12) !important;
+    color: #7ef5ff !important;
+}
+
+/* City label */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) label {
+    color: #00c8e0 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ─── WEATHER FILTER — Amber / Gold Professional ─ */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div {
+    background: rgba(245, 166, 35, 0.06) !important;
+    border: 1px solid rgba(245, 166, 35, 0.35) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0px rgba(245,166,35,0.2);
+    transition: box-shadow 0.2s ease;
+}
+
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div:focus-within {
+    box-shadow: 0 0 0 2px rgba(245,166,35,0.3) !important;
+    border-color: rgba(245,166,35,0.65) !important;
+}
+
+/* Weather tags */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] {
+    background: linear-gradient(135deg, rgba(245,166,35,0.30), rgba(220,140,20,0.18)) !important;
+    border: 1px solid rgba(245, 166, 35, 0.60) !important;
+    border-radius: 6px !important;
+    color: #ffd77a !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(245,166,35,0.4);
+}
+
+/* Weather tag close button */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] svg {
+    fill: rgba(245,166,35,0.75) !important;
+}
+
+/* Weather dropdown items hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) li[aria-selected="false"]:hover {
+    background: rgba(245,166,35,0.12) !important;
+    color: #ffd77a !important;
+}
+
+/* Weather label */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) label {
+    color: #f5a623 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ─── Sidebar filter section dividers ─────────── */
+.filter-section-city {
+    background: rgba(0, 200, 224, 0.06);
+    border: 1px solid rgba(0, 200, 224, 0.2);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-section-weather {
+    background: rgba(245, 166, 35, 0.06);
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-label-city {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #00c8e0;
+    margin-bottom: 0.4rem;
+}
+
+.filter-label-weather {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #f5a623;
+    margin-bottom: 0.4rem;
+}
+
+/* Sidebar slider */
+[data-testid="stSidebar"] [data-testid="stSlider"] div[role="slider"] {
+    background: var(--accent-blue) !important;
+    border-color: var(--accent-blue) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSlider"] [data-testid="stSliderTrack"] > div:first-child {
+    background: rgba(255,255,255,0.08) !important;
+}
+
+[data-testid="stSidebar"] [data-testid="stSlider"] [data-testid="stSliderTrack"] > div:nth-child(2) {
+    background: var(--accent-blue) !important;
+}
+
+/* Sidebar header label */
+[data-testid="stSidebar"] .stMarkdown h3,
+[data-testid="stSidebar"] [data-testid="stHeader"] {
+    color: var(--accent-blue) !important;
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600 !important;
+    border-bottom: 1px solid rgba(79,142,247,0.2);
+    padding-bottom: 0.4rem;
+    margin-bottom: 1rem !important;
+}
+
+/* ─── KPI METRIC CARDS ────────────────────────── */
+[data-testid="stMetric"]:nth-child(1) {
+    background: var(--gradient-rev) !important;
+    border: 1px solid rgba(79,142,247,0.35) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.5rem !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(79,142,247,0.12), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stMetric"]:nth-child(1)::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4f8ef7, #7eb8ff);
+    border-radius: 14px 14px 0 0;
+}
+
+[data-testid="stMetric"]:nth-child(2) {
+    background: var(--gradient-ord) !important;
+    border: 1px solid rgba(0,212,170,0.35) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.5rem !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(0,212,170,0.12), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stMetric"]:nth-child(2)::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #00d4aa, #00ffd0);
+    border-radius: 14px 14px 0 0;
+}
+
+[data-testid="stMetric"]:nth-child(3) {
+    background: var(--gradient-avg) !important;
+    border: 1px solid rgba(255,140,66,0.35) !important;
+    border-radius: 14px !important;
+    padding: 1.25rem 1.5rem !important;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(255,140,66,0.12), inset 0 1px 0 rgba(255,255,255,0.06) !important;
+}
+
+[data-testid="stMetric"]:nth-child(3)::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #ff8c42, #ffb380);
+    border-radius: 14px 14px 0 0;
+}
+
+[data-testid="stMetric"] label {
+    color: var(--text-muted) !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricValue"] {
+    color: var(--text-primary) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    font-size: 2rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2;
+}
+
+[data-testid="stMetric"] [data-testid="stMetricDelta"] {
+    font-size: 0.8rem !important;
+    font-weight: 500 !important;
+}
+
+/* ─── Divider ─────────────────────────────────── */
+hr {
+    border-color: rgba(255,255,255,0.07) !important;
+    margin: 1rem 0 !important;
+}
+
+/* ─── Download Button ─────────────────────────── */
+[data-testid="stDownloadButton"] button {
+    background: rgba(79,142,247,0.15) !important;
+    border: 1px solid rgba(79,142,247,0.4) !important;
+    color: #7eb8ff !important;
+    border-radius: 8px !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    padding: 0.4rem 1rem !important;
+    transition: all 0.2s ease !important;
+}
+
+[data-testid="stDownloadButton"] button:hover {
+    background: rgba(79,142,247,0.28) !important;
+    border-color: rgba(79,142,247,0.7) !important;
+    color: #fff !important;
+}
+
+/* ─── DataFrame / Table ───────────────────────── */
 [data-testid="stDataFrame"] {
-    background: white !important;
     border-radius: 12px !important;
-    border: 1px solid #e5e7eb !important;
-    padding: 4px !important;
+    overflow: hidden;
+    border: 1px solid var(--border) !important;
 }
 
-/* Pulse card */
-.pulse-box {
-    background: linear-gradient(135deg, #ffffff, #f8fafc);
-    border-left: 8px solid #ff6b6b;
-    padding: 16px 18px;
-    border-radius: 14px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.08);
-    animation: pulse 1.8s infinite;
-    margin-bottom: 10px;
+[data-testid="stDataFrame"] thead tr th {
+    background: rgba(79,142,247,0.15) !important;
+    color: #a0bfff !important;
+    font-size: 0.78rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 600 !important;
+    border-bottom: 1px solid rgba(79,142,247,0.2) !important;
+}
+
+[data-testid="stDataFrame"] tbody tr td {
+    color: var(--text-primary) !important;
+    font-size: 0.85rem !important;
+    border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+[data-testid="stDataFrame"] tbody tr:hover td {
+    background: rgba(79,142,247,0.07) !important;
+}
+
+/* ─── Chart Containers ────────────────────────── */
+[data-testid="stPlotlyChart"] {
+    background: var(--bg-card) !important;
+    border-radius: 14px !important;
+    border: 1px solid var(--border) !important;
+    padding: 0.75rem !important;
+    box-shadow: 0 2px 16px rgba(0,0,0,0.25) !important;
+}
+
+/* ─── Caption / Footer ────────────────────────── */
+[data-testid="stCaptionContainer"] {
+    color: var(--text-muted) !important;
+    font-size: 0.75rem !important;
+    text-align: right;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+}
+
+/* ─── Scrollbar ───────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: rgba(79,142,247,0.35); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(79,142,247,0.6); }
+
+/* ─── Refresh badge ───────────────────────────── */
+.refresh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: #00c8e0;
+    background: rgba(0,200,224,0.1);
+    border: 1px solid rgba(0,200,224,0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.refresh-dot {
+    width: 6px; height: 6px;
+    background: #00c8e0;
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
 }
 @keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,107,0.35); }
-    70% { transform: scale(1.01); box-shadow: 0 0 0 14px rgba(255,107,107,0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,107,0); }
-}
-.pulse-title {
-    font-size: 15px;
-    font-weight: 800;
-    color: #111111;
-}
-.pulse-value {
-    font-size: 24px;
-    font-weight: 900;
-    color: #111111;
-}
-.pulse-sub {
-    font-size: 13px;
-    color: #374151;
-    font-weight: 600;
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
 }
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# DATABASE
-# =========================================================
-conn = sqlite3.connect("enterprise_pro.db", check_same_thread=False)
-cursor = conn.cursor()
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS users(
-    username TEXT PRIMARY KEY,
-    password TEXT,
-    role TEXT
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS sales(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    time TEXT,
-    product TEXT,
-    price INTEGER,
-    city TEXT
-)
-""")
-
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS stocks(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    time TEXT,
-    open REAL,
-    high REAL,
-    low REAL,
-    close REAL,
-    volume INTEGER
-)
-""")
-conn.commit()
-
-# =========================================================
-# DEFAULT USERS
-# =========================================================
-def seed_users():
-    existing = cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0]
-    if existing == 0:
-        users = [
-            ("admin", "admin123", "Admin"),
-            ("manager", "manager123", "Manager")
-        ]
-        cursor.executemany("INSERT INTO users(username,password,role) VALUES(?,?,?)", users)
-        conn.commit()
-
-seed_users()
-
-# =========================================================
-# SESSION STATE
-# =========================================================
-defaults = {
-    "logged_in": False,
-    "username": "",
-    "role": "",
-    "last_revenue": 0,
-    "last_orders": 0
-}
-for k, v in defaults.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# =========================================================
-# LOGIN
-# =========================================================
-if not st.session_state.logged_in:
-    st.title("🔐 Enterprise Command Center PRO Login")
-    c1, c2, c3 = st.columns([1, 1.2, 1])
-    with c2:
-        st.markdown("### Sign In")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
-        if st.button("Login", use_container_width=True):
-            user = cursor.execute(
-                "SELECT username, password, role FROM users WHERE username=?",
-                (username,)
-            ).fetchone()
-
-            if user and password == user[1]:
-                st.session_state.logged_in = True
-                st.session_state.username = user[0]
-                st.session_state.role = user[2]
-                st.rerun()
-            else:
-                st.error("Invalid username or password")
-    st.stop()
-
-# =========================================================
-# SIDEBAR
-# =========================================================
-st.sidebar.title("⚙️ Control Panel")
-st.sidebar.success(f"User: {st.session_state.username}")
-st.sidebar.info(f"Role: {st.session_state.role}")
-
-page_options = ["Revenue Dashboard", "Stock Dashboard"]
-if st.session_state.role == "Admin":
-    page_options.append("Admin Panel")
-
-page = st.sidebar.selectbox("Select Dashboard", page_options)
-refresh = st.sidebar.slider("Auto Refresh (sec)", 5, 60, 10)
-st_autorefresh(interval=refresh * 1000, key="refresh_key")
-
-if st.sidebar.button("Logout"):
-    st.session_state.logged_in = False
-    st.session_state.username = ""
-    st.session_state.role = ""
-    st.rerun()
-
-# =========================================================
-# DATA GENERATORS
-# =========================================================
-products = ["Laptop", "Mobile", "Tablet", "Camera", "Headphones", "Watch", "Monitor"]
-cities = ["Chennai", "Mumbai", "Delhi", "Bangalore", "Hyderabad"]
-
-def insert_sale():
-    row = (
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        random.choice(products),
-        random.randint(2000, 50000),
-        random.choice(cities)
+# -------------------------------------------------
+# PLOTLY DARK THEME TEMPLATE
+# -------------------------------------------------
+PLOTLY_TEMPLATE = go.layout.Template(
+    layout=go.Layout(
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font=dict(family="DM Sans, sans-serif", color="#8a96b0", size=12),
+        title=dict(font=dict(color="#e8edf5", size=14, family="Space Grotesk")),
+        xaxis=dict(
+            gridcolor="rgba(255,255,255,0.05)",
+            linecolor="rgba(255,255,255,0.08)",
+            tickcolor="rgba(255,255,255,0.08)",
+            tickfont=dict(color="#8a96b0", size=11),
+            title=dict(font=dict(color="#8a96b0")),
+            zerolinecolor="rgba(255,255,255,0.05)",
+        ),
+        yaxis=dict(
+            gridcolor="rgba(255,255,255,0.05)",
+            linecolor="rgba(255,255,255,0.08)",
+            tickcolor="rgba(255,255,255,0.08)",
+            tickfont=dict(color="#8a96b0", size=11),
+            title=dict(font=dict(color="#8a96b0")),
+            zerolinecolor="rgba(255,255,255,0.05)",
+        ),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.04)",
+            bordercolor="rgba(255,255,255,0.08)",
+            borderwidth=1,
+            font=dict(color="#8a96b0"),
+        ),
+        colorway=["#4f8ef7", "#00d4aa", "#ff8c42", "#a78bfa", "#f472b6", "#fbbf24"],
+        margin=dict(l=40, r=20, t=40, b=40),
+        hoverlabel=dict(
+            bgcolor="#1a2540",
+            bordercolor="rgba(79,142,247,0.4)",
+            font=dict(color="#e8edf5", family="DM Sans"),
+        ),
     )
-    cursor.execute("INSERT INTO sales(time, product, price, city) VALUES(?,?,?,?)", row)
-    conn.commit()
+)
 
-def insert_stock():
-    last_close_row = cursor.execute("SELECT close FROM stocks ORDER BY id DESC LIMIT 1").fetchone()
-    base = last_close_row[0] if last_close_row else 1000.0
-
-    open_p = round(base + random.uniform(-15, 15), 2)
-    high_p = round(open_p + random.uniform(5, 25), 2)
-    low_p = round(open_p - random.uniform(5, 25), 2)
-    close_p = round(random.uniform(low_p, high_p), 2)
-    volume = random.randint(1000, 8000)
-
-    row = (
-        datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        open_p, high_p, low_p, close_p, volume
-    )
-    cursor.execute(
-        "INSERT INTO stocks(time, open, high, low, close, volume) VALUES(?,?,?,?,?,?)",
-        row
-    )
-    conn.commit()
-
-insert_sale()
-insert_stock()
-
-sales_df = pd.read_sql("SELECT * FROM sales ORDER BY id ASC", conn)
-stock_df = pd.read_sql("SELECT * FROM stocks ORDER BY id ASC", conn)
-
-sales_df["time"] = pd.to_datetime(sales_df["time"])
-stock_df["time"] = pd.to_datetime(stock_df["time"])
-
-# =========================================================
-# SIMPLE AI PREDICTION
-# =========================================================
-def predict_next_revenue(df):
-    if len(df) < 3:
-        return 0
-
-    temp = df.copy()
-    temp["minute"] = temp["time"].dt.floor("min")
-    minute_rev = temp.groupby("minute")["price"].sum().reset_index()
-
-    if len(minute_rev) < 2:
-        return int(temp["price"].tail(5).mean())
-
-    y = minute_rev["price"].values.astype(float)
-    x = np.arange(len(y))
-    coef = np.polyfit(x, y, 1)
-    next_x = len(y)
-    prediction = coef[0] * next_x + coef[1]
-    return max(0, int(prediction))
-
-# =========================================================
-# REVENUE DASHBOARD
-# =========================================================
-if page == "Revenue Dashboard":
-    st.title("🔥 Enterprise Revenue Dashboard")
-
-    total_revenue = int(sales_df["price"].sum()) if not sales_df.empty else 0
-    total_orders = len(sales_df)
-    avg_order = int(sales_df["price"].mean()) if not sales_df.empty else 0
-    next_prediction = predict_next_revenue(sales_df)
-
-    revenue_delta = total_revenue - st.session_state.last_revenue
-    orders_delta = total_orders - st.session_state.last_orders
-    st.session_state.last_revenue = total_revenue
-    st.session_state.last_orders = total_orders
-
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("💰 Total Revenue", f"₹{total_revenue:,}", f"{revenue_delta:+,}")
-    c2.metric("📦 Total Orders", f"{total_orders:,}", f"{orders_delta:+}")
-    c3.metric("📊 Avg Order Value", f"₹{avg_order:,}")
-    c4.metric("🧠 Next Revenue Prediction", f"₹{next_prediction:,}")
-
+# -------------------------------------------------
+# TITLE
+# -------------------------------------------------
+col_title, col_badge = st.columns([6, 1])
+with col_title:
+    st.title("🚀 Enterprise Live Revenue Pulse")
+with col_badge:
     st.markdown(
-        f"""
-        <div class="pulse-box">
-            <div class="pulse-title">Real-Time Pulse Alert</div>
-            <div class="pulse-value">₹{revenue_delta:+,}</div>
-            <div class="pulse-sub">Latest revenue movement after refresh cycle</div>
-        </div>
-        """,
+        '<div style="padding-top:0.6rem">'
+        '<span class="refresh-badge"><span class="refresh-dot"></span>LIVE · 5s</span>'
+        '</div>',
         unsafe_allow_html=True
     )
 
-    col1, col2 = st.columns(2)
+# -------------------------------------------------
+# SESSION STATE INIT
+# -------------------------------------------------
+if "running" not in st.session_state:
+    st.session_state.running = True
 
-    with col1:
-        city_data = sales_df.groupby("city", as_index=False)["price"].sum().sort_values("price", ascending=False)
-        fig_bar = px.bar(
-            city_data,
-            x="city",
-            y="price",
-            color="city",
-            color_discrete_sequence=["#ff6b6b", "#1dd1a1", "#feca57", "#54a0ff", "#ff9f43"]
-        )
-        fig_bar.update_layout(
-            title="Revenue by City",
-            paper_bgcolor="white",
-            plot_bgcolor="white",
-            font=dict(color="black"),
-            showlegend=False
-        )
-        st.plotly_chart(fig_bar, use_container_width=True)
+if "last_revenue" not in st.session_state:
+    st.session_state.last_revenue = 0
 
-    with col2:
-        product_data = sales_df.groupby("product", as_index=False)["price"].sum()
-        fig_pie = px.pie(
-            product_data,
-            names="product",
-            values="price",
-            hole=0.45,
-            color_discrete_sequence=["#ff6b6b", "#1dd1a1", "#feca57", "#54a0ff", "#ff9f43", "#48dbfb", "#10ac84"]
-        )
-        fig_pie.update_layout(
-            title="Product Revenue Share",
-            paper_bgcolor="white",
-            font=dict(color="black")
-        )
-        st.plotly_chart(fig_pie, use_container_width=True)
+# -------------------------------------------------
+# SIDEBAR CONTROLS
+# -------------------------------------------------
+st.sidebar.markdown("""
+<div style="
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e8edf5;
+    padding: 0.25rem 0 1rem 0;
+    border-bottom: 1px solid rgba(79,142,247,0.25);
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.3px;
+">⚙️ Dashboard Controls</div>
+""", unsafe_allow_html=True)
 
-    st.subheader("📈 Revenue Trend")
-    trend_df = sales_df.copy()
-    trend_df["minute"] = trend_df["time"].dt.floor("min")
-    trend = trend_df.groupby("minute", as_index=False)["price"].sum()
+st.session_state.running = st.sidebar.toggle("▶️ Run Simulation", value=True)
 
-    fig_line = go.Figure()
-    fig_line.add_trace(go.Scatter(
-        x=trend["minute"],
-        y=trend["price"],
-        mode="lines+markers",
-        line=dict(color="#ee5253", width=3),
-        marker=dict(size=8, color="#feca57")
-    ))
-    fig_line.update_layout(
-        title="Revenue Over Time",
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(color="black"),
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+refresh_rate = st.sidebar.slider("⏱ Refresh Speed (sec)", 5, 60, 5)   # ← DEFAULT 5s
+
+# ── City Filter ─────────────────────────────────
+st.sidebar.markdown("""
+<div style="margin-top:1.2rem; margin-bottom:0.3rem;">
+  <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+               letter-spacing:1.4px; color:#00c8e0;">
+    🏙 Filter by City
+  </span>
+</div>
+""", unsafe_allow_html=True)
+
+city_filter = st.sidebar.multiselect(
+    label="Filter by City",
+    options=["Chennai", "Bangalore", "Hyderabad", "Mumbai", "Delhi", "Pune"],
+    default=[],
+    label_visibility="collapsed",
+)
+
+# ── Weather Filter ───────────────────────────────
+st.sidebar.markdown("""
+<div style="margin-top:1.1rem; margin-bottom:0.3rem;">
+  <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+               letter-spacing:1.4px; color:#f5a623;">
+    🌦 Filter by Weather
+  </span>
+</div>
+""", unsafe_allow_html=True)
+
+weather_filter = st.sidebar.multiselect(
+    label="Filter by Weather",
+    options=["Rain 🌧️", "Cloudy ☁️", "Heat ☀️", "Normal 🌤️", "Unknown"],
+    default=[],
+    label_visibility="collapsed",
+)
+
+st.sidebar.markdown("""
+<div style="
+    margin-top: 2rem;
+    padding: 0.75rem;
+    background: rgba(79,142,247,0.08);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: #8a96b0;
+    line-height: 1.6;
+">
+📡 Live data streams every <b style='color:#4f8ef7'>5 seconds</b>.<br>
+All transactions are stored in <b style='color:#4f8ef7'>sales.db</b>.
+</div>
+""", unsafe_allow_html=True)
+
+if st.session_state.running:
+    st_autorefresh(interval=refresh_rate * 1000, key="refresh")   # ← uses slider value (default 5s)
+
+# -------------------------------------------------
+# DATABASE (cached connection)
+# -------------------------------------------------
+@st.cache_resource
+def get_db():
+    conn = sqlite3.connect("sales.db", check_same_thread=False)
+    cur = conn.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS sales(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        time TEXT,
+        product TEXT,
+        price REAL,
+        city TEXT,
+        weather TEXT
+    )
+    """)
+    conn.commit()
+    return conn
+
+conn = get_db()
+cursor = conn.cursor()
+
+# -------------------------------------------------
+# DATA CONFIG
+# -------------------------------------------------
+products = ["Laptop","Mobile","Headphones","Keyboard","Monitor","Mouse","Tablet","Smart Watch"]
+cities   = ["Chennai","Bangalore","Hyderabad","Mumbai","Delhi","Pune"]
+prices   = [25000, 35000, 1500, 2000, 12000, 800, 22000, 7000]
+
+# -------------------------------------------------
+# WEATHER API
+# -------------------------------------------------
+@st.cache_data(ttl=300)
+def get_weather(city):
+    try:
+        url = f"https://wttr.in/{city}?format=j1"
+        r = requests.get(url, timeout=3)
+        data = r.json()
+        condition = data["current_condition"][0]["weatherDesc"][0]["value"].lower()
+        if "rain"  in condition: return "Rain 🌧️"
+        if "cloud" in condition: return "Cloudy ☁️"
+        if "sun"   in condition: return "Heat ☀️"
+        return "Normal 🌤️"
+    except:
+        return "Unknown"
+
+# -------------------------------------------------
+# GENERATE SALE
+# -------------------------------------------------
+def generate_sale():
+    product = random.choice(products)
+    price   = random.choice(prices)
+    city    = random.choice(cities)
+    weather = get_weather(city)
+    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "INSERT INTO sales(time,product,price,city,weather) VALUES(?,?,?,?,?)",
+        (time_now, product, price, city, weather)
+    )
+    conn.commit()
+
+if st.session_state.running:
+    generate_sale()
+
+# -------------------------------------------------
+# LOAD & FILTER DATA
+# -------------------------------------------------
+df = pd.read_sql("SELECT * FROM sales", conn)
+df["time"] = pd.to_datetime(df["time"], errors="coerce")
+
+if city_filter:
+    df = df[df["city"].isin(city_filter)]
+if weather_filter:
+    df = df[df["weather"].isin(weather_filter)]
+
+# -------------------------------------------------
+# KPI METRICS
+# -------------------------------------------------
+total_revenue = df["price"].sum()
+total_orders  = len(df)
+avg_order     = df["price"].mean() if total_orders > 0 else 0
+
+delta = total_revenue - st.session_state.last_revenue
+st.session_state.last_revenue = total_revenue
+
+c1, c2, c3 = st.columns(3)
+c1.metric("💰 Total Revenue",   f"₹{int(total_revenue):,}", f"₹{int(delta):,}")
+c2.metric("📦 Total Orders",    total_orders)
+c3.metric("📊 Avg Order Value", f"₹{int(avg_order):,}")
+
+st.divider()
+
+# -------------------------------------------------
+# EXPORT BUTTON
+# -------------------------------------------------
+st.download_button(
+    "⬇️ Export Sales Data as CSV",
+    data=df.to_csv(index=False),
+    file_name="sales_data.csv",
+    mime="text/csv"
+)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# LIVE FEED TABLE
+# -------------------------------------------------
+st.subheader("🟢 Live Sales Feed")
+st.dataframe(
+    df.sort_values("id", ascending=False).head(15),
+    use_container_width=True,
+    hide_index=True,
+)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# CHARTS — Revenue by City  |  Weather Impact
+# -------------------------------------------------
+col1, col2 = st.columns(2, gap="medium")
+
+with col1:
+    st.subheader("📈 Revenue by City")
+    city_chart = df.groupby("city")["price"].sum().reset_index().sort_values("price", ascending=False)
+    fig = px.bar(
+        city_chart, x="city", y="price",
+        text=city_chart["price"].apply(lambda x: f"₹{int(x):,}"),
+        color="price",
+        color_continuous_scale=[[0,"#1a3a6b"],[0.5,"#4f8ef7"],[1.0,"#7eb8ff"]],
+        template=PLOTLY_TEMPLATE,
+    )
+    fig.update_traces(
+        textposition="outside",
+        textfont=dict(color="#e8edf5", size=11),
+        marker_line_width=0,
+        hovertemplate="<b>%{x}</b><br>Revenue: ₹%{y:,.0f}<extra></extra>",
+    )
+    fig.update_coloraxes(showscale=False)
+    fig.update_layout(
+        xaxis_title="", yaxis_title="Revenue (₹)",
+        height=320, showlegend=False,
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.subheader("🌦 Weather Impact")
+    weather_chart = df.groupby("weather")["price"].sum().reset_index()
+    fig2 = px.pie(
+        weather_chart, names="weather", values="price",
+        hole=0.55,
+        color_discrete_sequence=["#4f8ef7","#00d4aa","#ff8c42","#a78bfa","#f472b6"],
+        template=PLOTLY_TEMPLATE,
+    )
+    fig2.update_traces(
+        textposition="outside",
+        textinfo="percent+label",
+        textfont=dict(color="#e8edf5", size=11),
+        marker=dict(line=dict(color="#0e1525", width=3)),
+        hovertemplate="<b>%{label}</b><br>Revenue: ₹%{value:,.0f}<br>Share: %{percent}<extra></extra>",
+    )
+    fig2.update_layout(
+        height=320,
+        legend=dict(font=dict(color="#8a96b0"), orientation="h", y=-0.15),
+        annotations=[dict(
+            text="Sales<br>Mix", x=0.5, y=0.5, showarrow=False,
+            font=dict(color="#e8edf5", size=13, family="Space Grotesk"),
+        )],
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# TREND ANALYSIS
+# -------------------------------------------------
+st.subheader("📊 Revenue Trend (per minute)")
+
+if not df.empty and df["time"].notna().any():
+    trend = df.set_index("time").resample("1min")["price"].sum().reset_index()
+    fig3 = go.Figure()
+    fig3.add_traces([
+        go.Scatter(
+            x=trend["time"], y=trend["price"],
+            mode="lines",
+            line=dict(color="rgba(79,142,247,0.25)", width=0),
+            fill="tozeroy",
+            fillcolor="rgba(79,142,247,0.08)",
+            showlegend=False,
+            hoverinfo="skip",
+        ),
+        go.Scatter(
+            x=trend["time"], y=trend["price"],
+            mode="lines+markers",
+            line=dict(color="#4f8ef7", width=2.5, shape="spline", smoothing=0.8),
+            marker=dict(color="#7eb8ff", size=7, line=dict(color="#0e1525", width=2)),
+            name="Revenue",
+            hovertemplate="<b>%{x|%H:%M}</b><br>₹%{y:,.0f}<extra></extra>",
+        ),
+    ])
+    fig3.update_layout(
+        template=PLOTLY_TEMPLATE,
+        height=300,
         xaxis_title="Time",
-        yaxis_title="Revenue"
+        yaxis_title="Revenue (₹)",
+        showlegend=False,
+        hovermode="x unified",
     )
-    st.plotly_chart(fig_line, use_container_width=True)
+    st.plotly_chart(fig3, use_container_width=True)
 
-    st.subheader("🟢 Live Transactions")
-    st.dataframe(
-        sales_df.sort_values("id", ascending=False).head(15),
-        use_container_width=True,
-        hide_index=True
-    )
+st.markdown("<br>", unsafe_allow_html=True)
 
-    st.download_button(
-        "⬇️ Download Revenue Data",
-        data=sales_df.to_csv(index=False),
-        file_name="revenue_data.csv",
-        mime="text/csv"
-    )
+# -------------------------------------------------
+# CITY × WEATHER MATRIX
+# -------------------------------------------------
+st.subheader("🌍 City × Weather Matrix")
+matrix = df.groupby(["city", "weather"]).size().reset_index(name="Orders")
+st.dataframe(matrix, use_container_width=True, hide_index=True)
 
-# =========================================================
-# STOCK DASHBOARD
-# =========================================================
-elif page == "Stock Dashboard":
-    st.title("📊 Candlestick Stock Dashboard")
-
-    latest_close = float(stock_df["close"].iloc[-1]) if not stock_df.empty else 0
-    latest_open = float(stock_df["open"].iloc[-1]) if not stock_df.empty else 0
-    latest_high = float(stock_df["high"].max()) if not stock_df.empty else 0
-    latest_volume = int(stock_df["volume"].sum()) if not stock_df.empty else 0
-
-    s1, s2, s3, s4 = st.columns(4)
-    s1.metric("💹 Last Close", f"₹{latest_close:,.2f}")
-    s2.metric("🔔 Last Open", f"₹{latest_open:,.2f}")
-    s3.metric("📈 Session High", f"₹{latest_high:,.2f}")
-    s4.metric("📦 Total Volume", f"{latest_volume:,}")
-
-    fig_candle = go.Figure(data=[go.Candlestick(
-        x=stock_df["time"],
-        open=stock_df["open"],
-        high=stock_df["high"],
-        low=stock_df["low"],
-        close=stock_df["close"],
-        increasing_line_color="#10ac84",
-        decreasing_line_color="#ee5253"
-    )])
-
-    fig_candle.update_layout(
-        title="Live Candlestick Chart",
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(color="black"),
-        xaxis_title="Time",
-        yaxis_title="Price",
-        xaxis_rangeslider_visible=False,
-        height=500
-    )
-    st.plotly_chart(fig_candle, use_container_width=True)
-
-    vol_fig = px.bar(
-        stock_df.tail(20),
-        x="time",
-        y="volume",
-        color_discrete_sequence=["#54a0ff"]
-    )
-    vol_fig.update_layout(
-        title="Recent Volume",
-        paper_bgcolor="white",
-        plot_bgcolor="white",
-        font=dict(color="black"),
-        showlegend=False
-    )
-    st.plotly_chart(vol_fig, use_container_width=True)
-
-    st.subheader("Recent Stock Data")
-    st.dataframe(stock_df.sort_values("id", ascending=False).head(15), use_container_width=True, hide_index=True)
-
-# =========================================================
-# ADMIN PANEL
-# =========================================================
-elif page == "Admin Panel" and st.session_state.role == "Admin":
-    st.title("👥 Admin User Management")
-
-    st.subheader("Create New User")
-    a1, a2, a3 = st.columns(3)
-    new_user = a1.text_input("New Username")
-    new_pass = a2.text_input("New Password")
-    new_role = a3.selectbox("Role", ["Admin", "Manager"])
-
-    if st.button("Add User"):
-        if new_user.strip() and new_pass.strip():
-            exists = cursor.execute("SELECT username FROM users WHERE username=?", (new_user.strip(),)).fetchone()
-            if exists:
-                st.warning("Username already exists")
-            else:
-                cursor.execute(
-                    "INSERT INTO users(username,password,role) VALUES(?,?,?)",
-                    (new_user.strip(), new_pass.strip(), new_role)
-                )
-                conn.commit()
-                st.success("User added successfully")
-                st.rerun()
-        else:
-            st.error("Please enter username and password")
-
-    st.subheader("Current Users")
-    users_df = pd.read_sql("SELECT username, role FROM users", conn)
-    st.dataframe(users_df, use_container_width=True, hide_index=True)
+# -------------------------------------------------
+# FOOTER
+# -------------------------------------------------
+st.caption(f"🕒 Last Updated: {datetime.now().strftime('%d %b %Y · %H:%M:%S')}  |  Built with Streamlit + Plotly")
