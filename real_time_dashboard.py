@@ -329,4 +329,321 @@ PLOTLY_TEMPLATE = go.layout.Template(
             gridcolor="rgba(255,255,255,0.05)",
             linecolor="rgba(255,255,255,0.08)",
             tickcolor="rgba(255,255,255,0.08)",
-            tickfont=dict(color="#8a96b0
+            tickfont=dict(color="#8a96b0", size=11),
+            title=dict(font=dict(color="#8a96b0")),
+            zerolinecolor="rgba(255,255,255,0.05)",
+        ),
+        yaxis=dict(
+            gridcolor="rgba(255,255,255,0.05)",
+            linecolor="rgba(255,255,255,0.08)",
+            tickcolor="rgba(255,255,255,0.08)",
+            tickfont=dict(color="#8a96b0", size=11),
+            title=dict(font=dict(color="#8a96b0")),
+            zerolinecolor="rgba(255,255,255,0.05)",
+        ),
+        legend=dict(
+            bgcolor="rgba(255,255,255,0.04)",
+            bordercolor="rgba(255,255,255,0.08)",
+            borderwidth=1,
+            font=dict(color="#8a96b0"),
+        ),
+        colorway=["#4f8ef7", "#00d4aa", "#ff8c42", "#a78bfa", "#f472b6", "#fbbf24"],
+        margin=dict(l=40, r=20, t=40, b=40),
+        hoverlabel=dict(
+            bgcolor="#1a2540",
+            bordercolor="rgba(79,142,247,0.4)",
+            font=dict(color="#e8edf5", family="DM Sans"),
+        ),
+    )
+)
+
+# -------------------------------------------------
+# TITLE
+# -------------------------------------------------
+st.title("🚀 Enterprise Live Revenue Pulse")
+
+# -------------------------------------------------
+# SESSION STATE INIT
+# -------------------------------------------------
+if "running" not in st.session_state:
+    st.session_state.running = True
+
+if "last_revenue" not in st.session_state:
+    st.session_state.last_revenue = 0
+
+# -------------------------------------------------
+# SIDEBAR CONTROLS
+# -------------------------------------------------
+st.sidebar.markdown("""
+<div style="
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #e8edf5;
+    padding: 0.25rem 0 1rem 0;
+    border-bottom: 1px solid rgba(79,142,247,0.25);
+    margin-bottom: 1.25rem;
+    letter-spacing: -0.3px;
+">⚙️ Dashboard Controls</div>
+""", unsafe_allow_html=True)
+
+st.session_state.running = st.sidebar.toggle("▶️ Run Simulation", value=True)
+
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+refresh_rate = st.sidebar.slider("⏱ Refresh Speed (sec)", 5, 60, 15)
+
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
+city_filter = st.sidebar.multiselect(
+    "🏙 Filter by City",
+    ["Chennai", "Bangalore", "Hyderabad", "Mumbai", "Delhi", "Pune"],
+    default=[]
+)
+
+weather_filter = st.sidebar.multiselect(
+    "🌦 Filter by Weather",
+    ["Rain 🌧️", "Cloudy ☁️", "Heat ☀️", "Normal 🌤️", "Unknown"],
+    default=[]
+)
+
+st.sidebar.markdown("""
+<div style="
+    margin-top: 2rem;
+    padding: 0.75rem;
+    background: rgba(79,142,247,0.08);
+    border: 1px solid rgba(79,142,247,0.2);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    color: #8a96b0;
+    line-height: 1.6;
+">
+📡 Live data streams every <b style='color:#4f8ef7'>refresh cycle</b>.<br>
+All transactions are stored in <b style='color:#4f8ef7'>sales.db</b>.
+</div>
+""", unsafe_allow_html=True)
+
+if st.session_state.running:
+    st_autorefresh(interval=refresh_rate * 1000, key="refresh")
+
+# -------------------------------------------------
+# DATABASE (cached connection)
+# -------------------------------------------------
+@st.cache_resource
+def get_db():
+    conn = sqlite3.connect("sales.db", check_same_thread=False)
+    cur = conn.cursor()
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS sales(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        time TEXT,
+        product TEXT,
+        price REAL,
+        city TEXT,
+        weather TEXT
+    )
+    """)
+    conn.commit()
+    return conn
+
+conn = get_db()
+cursor = conn.cursor()
+
+# -------------------------------------------------
+# DATA CONFIG
+# -------------------------------------------------
+products = ["Laptop","Mobile","Headphones","Keyboard","Monitor","Mouse","Tablet","Smart Watch"]
+cities   = ["Chennai","Bangalore","Hyderabad","Mumbai","Delhi","Pune"]
+prices   = [25000, 35000, 1500, 2000, 12000, 800, 22000, 7000]
+
+# -------------------------------------------------
+# WEATHER API
+# -------------------------------------------------
+@st.cache_data(ttl=300)
+def get_weather(city):
+    try:
+        url = f"https://wttr.in/{city}?format=j1"
+        r = requests.get(url, timeout=3)
+        data = r.json()
+        condition = data["current_condition"][0]["weatherDesc"][0]["value"].lower()
+        if "rain"  in condition: return "Rain 🌧️"
+        if "cloud" in condition: return "Cloudy ☁️"
+        if "sun"   in condition: return "Heat ☀️"
+        return "Normal 🌤️"
+    except:
+        return "Unknown"
+
+# -------------------------------------------------
+# GENERATE SALE
+# -------------------------------------------------
+def generate_sale():
+    product = random.choice(products)
+    price   = random.choice(prices)
+    city    = random.choice(cities)
+    weather = get_weather(city)
+    time_now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    cursor.execute(
+        "INSERT INTO sales(time,product,price,city,weather) VALUES(?,?,?,?,?)",
+        (time_now, product, price, city, weather)
+    )
+    conn.commit()
+
+if st.session_state.running:
+    generate_sale()
+
+# -------------------------------------------------
+# LOAD & FILTER DATA
+# -------------------------------------------------
+df = pd.read_sql("SELECT * FROM sales", conn)
+df["time"] = pd.to_datetime(df["time"], errors="coerce")
+
+if city_filter:
+    df = df[df["city"].isin(city_filter)]
+if weather_filter:
+    df = df[df["weather"].isin(weather_filter)]
+
+# -------------------------------------------------
+# KPI METRICS
+# -------------------------------------------------
+total_revenue = df["price"].sum()
+total_orders  = len(df)
+avg_order     = df["price"].mean() if total_orders > 0 else 0
+
+delta = total_revenue - st.session_state.last_revenue
+st.session_state.last_revenue = total_revenue
+
+c1, c2, c3 = st.columns(3)
+c1.metric("💰 Total Revenue",   f"₹{int(total_revenue):,}", f"₹{int(delta):,}")
+c2.metric("📦 Total Orders",    total_orders)
+c3.metric("📊 Avg Order Value", f"₹{int(avg_order):,}")
+
+st.divider()
+
+# -------------------------------------------------
+# EXPORT BUTTON
+# -------------------------------------------------
+st.download_button(
+    "⬇️ Export Sales Data as CSV",
+    data=df.to_csv(index=False),
+    file_name="sales_data.csv",
+    mime="text/csv"
+)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# LIVE FEED TABLE
+# -------------------------------------------------
+st.subheader("🟢 Live Sales Feed")
+st.dataframe(
+    df.sort_values("id", ascending=False).head(15),
+    use_container_width=True,
+    hide_index=True,
+)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# CHARTS — Revenue by City  |  Weather Impact
+# -------------------------------------------------
+col1, col2 = st.columns(2, gap="medium")
+
+with col1:
+    st.subheader("📈 Revenue by City")
+    city_chart = df.groupby("city")["price"].sum().reset_index().sort_values("price", ascending=False)
+    fig = px.bar(
+        city_chart, x="city", y="price",
+        text=city_chart["price"].apply(lambda x: f"₹{int(x):,}"),
+        color="price",
+        color_continuous_scale=[[0,"#1a3a6b"],[0.5,"#4f8ef7"],[1.0,"#7eb8ff"]],
+        template=PLOTLY_TEMPLATE,
+    )
+    fig.update_traces(
+        textposition="outside",
+        textfont=dict(color="#e8edf5", size=11),
+        marker_line_width=0,
+        hovertemplate="<b>%{x}</b><br>Revenue: ₹%{y:,.0f}<extra></extra>",
+    )
+    fig.update_coloraxes(showscale=False)
+    fig.update_layout(
+        xaxis_title="", yaxis_title="Revenue (₹)",
+        height=320, showlegend=False,
+    )
+    st.plotly_chart(fig, use_container_width=True)
+
+with col2:
+    st.subheader("🌦 Weather Impact")
+    weather_chart = df.groupby("weather")["price"].sum().reset_index()
+    fig2 = px.pie(
+        weather_chart, names="weather", values="price",
+        hole=0.55,
+        color_discrete_sequence=["#4f8ef7","#00d4aa","#ff8c42","#a78bfa","#f472b6"],
+        template=PLOTLY_TEMPLATE,
+    )
+    fig2.update_traces(
+        textposition="outside",
+        textinfo="percent+label",
+        textfont=dict(color="#e8edf5", size=11),
+        marker=dict(line=dict(color="#0e1525", width=3)),
+        hovertemplate="<b>%{label}</b><br>Revenue: ₹%{value:,.0f}<br>Share: %{percent}<extra></extra>",
+    )
+    fig2.update_layout(
+        height=320,
+        legend=dict(font=dict(color="#8a96b0"), orientation="h", y=-0.15),
+        annotations=[dict(
+            text="Sales<br>Mix", x=0.5, y=0.5, showarrow=False,
+            font=dict(color="#e8edf5", size=13, family="Space Grotesk"),
+        )],
+    )
+    st.plotly_chart(fig2, use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# TREND ANALYSIS
+# -------------------------------------------------
+st.subheader("📊 Revenue Trend (per minute)")
+
+if not df.empty and df["time"].notna().any():
+    trend = df.set_index("time").resample("1min")["price"].sum().reset_index()
+    fig3 = go.Figure()
+    fig3.add_traces([
+        go.Scatter(
+            x=trend["time"], y=trend["price"],
+            mode="lines",
+            line=dict(color="rgba(79,142,247,0.25)", width=0),
+            fill="tozeroy",
+            fillcolor="rgba(79,142,247,0.08)",
+            showlegend=False,
+            hoverinfo="skip",
+        ),
+        go.Scatter(
+            x=trend["time"], y=trend["price"],
+            mode="lines+markers",
+            line=dict(color="#4f8ef7", width=2.5, shape="spline", smoothing=0.8),
+            marker=dict(color="#7eb8ff", size=7, line=dict(color="#0e1525", width=2)),
+            name="Revenue",
+            hovertemplate="<b>%{x|%H:%M}</b><br>₹%{y:,.0f}<extra></extra>",
+        ),
+    ])
+    fig3.update_layout(
+        template=PLOTLY_TEMPLATE,
+        height=300,
+        xaxis_title="Time",
+        yaxis_title="Revenue (₹)",
+        showlegend=False,
+        hovermode="x unified",
+    )
+    st.plotly_chart(fig3, use_container_width=True)
+
+st.markdown("<br>", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# CITY × WEATHER MATRIX
+# -------------------------------------------------
+st.subheader("🌍 City × Weather Matrix")
+matrix = df.groupby(["city", "weather"]).size().reset_index(name="Orders")
+st.dataframe(matrix, use_container_width=True, hide_index=True)
+
+# -------------------------------------------------
+# FOOTER
+# -------------------------------------------------
+st.caption(f"🕒 Last Updated: {datetime.now().strftime('%d %b %Y · %H:%M:%S')}  |  Built with Streamlit + Plotly")
