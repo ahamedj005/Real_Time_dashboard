@@ -110,99 +110,71 @@ h2, h3 {
     padding: 0.4rem 0.75rem;
 }
 
-/* ─── CITY FILTER — Teal / Cyan Professional ──── */
-/* Multiselect container */
+/* ─── CITY FILTER — RED THEME ──── */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div {
-    background: rgba(0, 200, 224, 0.06) !important;
-    border: 1px solid rgba(0, 200, 224, 0.35) !important;
+    background: rgba(255, 0, 0, 0.06) !important;
+    border: 1px solid rgba(255, 0, 0, 0.35) !important;
     border-radius: 10px !important;
     color: var(--text-primary) !important;
-    box-shadow: 0 0 0 0px rgba(0,200,224,0.2);
-    transition: box-shadow 0.2s ease;
 }
 
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div:focus-within {
-    box-shadow: 0 0 0 2px rgba(0,200,224,0.3) !important;
-    border-color: rgba(0,200,224,0.6) !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3) !important;
+    border-color: rgba(255, 0, 0, 0.7) !important;
 }
 
 /* City tags */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] {
-    background: linear-gradient(135deg, rgba(0,200,224,0.28), rgba(0,180,200,0.18)) !important;
-    border: 1px solid rgba(0, 200, 224, 0.55) !important;
-    border-radius: 6px !important;
-    color: #7ef5ff !important;
-    font-size: 0.78rem !important;
+    background: linear-gradient(135deg, rgba(255,0,0,0.35), rgba(180,0,0,0.2)) !important;
+    border: 1px solid rgba(255, 0, 0, 0.7) !important;
+    color: #ffb3b3 !important;
     font-weight: 600 !important;
-    text-shadow: 0 0 8px rgba(0,200,224,0.4);
 }
 
-/* City tag close button */
-[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] svg {
-    fill: rgba(0,200,224,0.75) !important;
-}
-
-/* City dropdown items hover */
-[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) li[aria-selected="false"]:hover {
-    background: rgba(0,200,224,0.12) !important;
-    color: #7ef5ff !important;
+/* City hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) li:hover {
+    background: rgba(255, 0, 0, 0.12) !important;
+    color: #ffb3b3 !important;
 }
 
 /* City label */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) label {
-    color: #00c8e0 !important;
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
+    color: #ff4d4d !important;
 }
 
-/* ─── WEATHER FILTER — Amber / Gold Professional ─ */
+
+/* ─── WEATHER FILTER — RED THEME ─── */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div {
-    background: rgba(245, 166, 35, 0.06) !important;
-    border: 1px solid rgba(245, 166, 35, 0.35) !important;
+    background: rgba(255, 0, 0, 0.06) !important;
+    border: 1px solid rgba(255, 0, 0, 0.35) !important;
     border-radius: 10px !important;
     color: var(--text-primary) !important;
-    box-shadow: 0 0 0 0px rgba(245,166,35,0.2);
-    transition: box-shadow 0.2s ease;
 }
 
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div:focus-within {
-    box-shadow: 0 0 0 2px rgba(245,166,35,0.3) !important;
-    border-color: rgba(245,166,35,0.65) !important;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3) !important;
+    border-color: rgba(255, 0, 0, 0.7) !important;
 }
 
 /* Weather tags */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] {
-    background: linear-gradient(135deg, rgba(245,166,35,0.30), rgba(220,140,20,0.18)) !important;
-    border: 1px solid rgba(245, 166, 35, 0.60) !important;
-    border-radius: 6px !important;
-    color: #ffd77a !important;
-    font-size: 0.78rem !important;
+    background: linear-gradient(135deg, rgba(255,0,0,0.35), rgba(180,0,0,0.2)) !important;
+    border: 1px solid rgba(255, 0, 0, 0.7) !important;
+    color: #ffb3b3 !important;
     font-weight: 600 !important;
-    text-shadow: 0 0 8px rgba(245,166,35,0.4);
 }
 
-/* Weather tag close button */
-[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] svg {
-    fill: rgba(245,166,35,0.75) !important;
-}
-
-/* Weather dropdown items hover */
-[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) li[aria-selected="false"]:hover {
-    background: rgba(245,166,35,0.12) !important;
-    color: #ffd77a !important;
+/* Weather hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) li:hover {
+    background: rgba(255, 0, 0, 0.12) !important;
+    color: #ffb3b3 !important;
 }
 
 /* Weather label */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) label {
-    color: #f5a623 !important;
-    font-size: 0.78rem !important;
-    font-weight: 700 !important;
-    text-transform: uppercase;
-    letter-spacing: 1.2px;
+    color: #ff4d4d !important;
 }
-
+            
 /* ─── Sidebar filter section dividers ─────────── */
 .filter-section-city {
     background: rgba(0, 200, 224, 0.06);
