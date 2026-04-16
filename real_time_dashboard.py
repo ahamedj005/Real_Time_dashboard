@@ -15,19 +15,35 @@ st.set_page_config(
     page_icon="📊"
 )
 
-# Soft, professional background + matching colors
+# Full‑page soft blue‑gray background + matching sidebar
 st.markdown(
     """
     <style>
-    .stApp {
+    /* Main page background */
+    [data-testid="stAppViewContainer"] > .main {
         background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
         color: #1e293b;
     }
-    .stApp header {
-        background: transparent !important;
+
+    /* Header background transparency */
+    [data-testid="stHeader"] {
+        background: rgba(0,0,0,0);
     }
 
-    /* Professional blue primary button */
+    /* Sidebar background to match main page */
+    [data-testid="stSidebar"] {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-right: 1px solid #cbd5e1;
+    }
+
+    /* Sidebar text color */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] .stMarkdown,
+    [data-testid="stSidebar"] label {
+        color: #1e293b;
+    }
+
+    /* Buttons & metrics */
     .stButton button {
         background-color: #2563eb;
         color: white;
@@ -39,12 +55,20 @@ st.markdown(
         background-color: #1d4ed8;
     }
 
-    /* Slightly card‑like dividers */
+    .stMetricLabel {
+        color: #475569;
+        font-size: 1rem;
+    }
+
+    .stMetricValue {
+        color: #0f172a;
+        font-weight: 500;
+    }
+
     .stDivider {
         border-color: #cbd5e1;
     }
 
-    /* Table background */
     .stDataframe {
         border-radius: 8px;
         overflow: hidden;
@@ -78,7 +102,6 @@ init_db()
 # -----------------------------
 products = ["Laptop","Mobile","Tablet","Camera","Headphones","Watch"]
 
-# More cities
 cities = [
     "Chennai", "Mumbai", "Delhi", "Bangalore", "Hyderabad",
     "Kolkata", "Pune", "Jaipur", "Lucknow", "Indore", "Surat",
@@ -103,6 +126,15 @@ def sale():
 # SIDEBAR FILTERS
 # -----------------------------
 st.sidebar.title("📊 Control Panel")
+
+# Show current date and time in sidebar
+now = datetime.now()
+st.sidebar.markdown(
+    f"<div style='color:#475569; font-size:0.9rem; margin-bottom:0.8rem;'>"
+    f"Date: {now.strftime('%Y-%m-%d')}<br/>"
+    f"Time: {now.strftime('%H:%M:%S')}</div>",
+    unsafe_allow_html=True
+)
 
 # Filters
 selected_cities = st.sidebar.multiselect(
@@ -129,7 +161,19 @@ def load_data():
 # -----------------------------
 # REVENUE
 # -----------------------------
-st.title("📊 Revenue Dashboard PRO")
+st.markdown(
+    "<h1 style='font-size:1.8rem; margin-bottom:0.5rem;'>"
+    "📊 Revenue Command Center PRO"
+    "</h1>",
+    unsafe_allow_html=True
+)
+
+st.markdown(
+    f"<p style='color:#475569; font-size:0.9rem; margin-top:-0.5rem;'>"
+    f"Today: {now.strftime('%Y-%m-%d')} &nbsp; • &nbsp; "
+    f"Live time: {now.strftime('%H:%M:%S')}</p>",
+    unsafe_allow_html=True
+)
 
 # Insert one dummy sale every refresh
 cursor.execute("INSERT INTO sales VALUES (?,?,?,?,?)", sale())
