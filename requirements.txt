@@ -1,6 +1,5 @@
-streamlit
-pandas
-numpy
-plotly
-requests
-streamlit-autorefresh
+streamlit==1.33.0
+pandas==2.2.2
+plotly==5.20.0
+passlib==1.7.4
+streamlit-autorefresh==1.0.1
