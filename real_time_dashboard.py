@@ -7,12 +7,38 @@ import sqlite3
 from streamlit_autorefresh import st_autorefresh
 
 # -----------------------------
-# CONFIG
+# CONFIG + CUSTOM THEME
 # -----------------------------
 st.set_page_config(
     page_title="Revenue Command Center PRO",
     layout="wide",
     page_icon="📊"
+)
+
+# Inject a soft professional background
+st.markdown(
+    """
+    <style>
+    .stApp {
+        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+        color: #2c3e50;
+    }
+    .stApp header {
+        background: transparent !important;
+    }
+    .stButton button {
+        background-color: #2980b9;
+        color: white;
+        border-radius: 8px;
+        border: none;
+        box-shadow: 0 2px 6px rgba(41, 128, 185, 0.2);
+    }
+    .stButton button:hover {
+        background-color: #1f6aa5;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
 )
 
 # -----------------------------
@@ -117,26 +143,28 @@ if not df.empty:
     c1, c2 = st.columns(2)
 
     with c1:
-        st.plotly_chart(
-            px.bar(
-                df,
-                x="city",
-                y="price",
-                color="city",
-                title="Sales by City"
-            ),
-            use_container_width=True
+        fig1 = px.bar(
+            df,
+            x="city",
+            y="price",
+            color="city",
+            title="Sales by City"
         )
+        fig1.update_layout(
+            font=dict(family="Arial", size=12),
+            title=dict(font=dict(size=16)),
+            showlegend=False
+        )
+        st.plotly_chart(fig1, use_container_width=True)
 
     with c2:
-        st.plotly_chart(
-            px.pie(
-                df,
-                names="product",
-                title="Sales by Product"
-            ),
-            use_container_width=True
+        fig2 = px.pie(
+            df,
+            names="product",
+            title="Sales by Product"
         )
+        fig2.update_traces(textinfo="percent+label")
+        st.plotly_chart(fig2, use_container_width=True)
 
     st.subheader("Live Data")
     st.dataframe(df.tail(10), use_container_width=True)
