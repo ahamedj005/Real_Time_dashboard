@@ -110,69 +110,75 @@ h2, h3 {
     padding: 0.4rem 0.75rem;
 }
 
-/* ─── CITY FILTER — RED THEME ──── */
+/* ─── CITY FILTER — PROFESSIONAL RED ─── */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div {
-    background: rgba(255, 0, 0, 0.06) !important;
-    border: 1px solid rgba(255, 0, 0, 0.35) !important;
+    background: #fff5f5 !important;
+    border: 1.5px solid #d32f2f !important;
     border-radius: 10px !important;
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
+/* Focus */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div:focus-within {
-    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3) !important;
-    border-color: rgba(255, 0, 0, 0.7) !important;
+    border: 1.8px solid #b71c1c !important;
+    box-shadow: 0 0 0 2px rgba(211,47,47,0.15) !important;
 }
 
-/* City tags */
+/* Selected tags */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] {
-    background: linear-gradient(135deg, rgba(255,0,0,0.35), rgba(180,0,0,0.2)) !important;
-    border: 1px solid rgba(255, 0, 0, 0.7) !important;
-    color: #ffb3b3 !important;
+    background: #d32f2f !important;
+    border: 1px solid #b71c1c !important;
+    color: #ffffff !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
 }
 
-/* City hover */
+/* Dropdown hover */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) li:hover {
-    background: rgba(255, 0, 0, 0.12) !important;
-    color: #ffb3b3 !important;
+    background: #ffebee !important;
+    color: #000000 !important;
 }
 
-/* City label */
+/* Label */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) label {
-    color: #ff4d4d !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
 }
 
 
-/* ─── WEATHER FILTER — RED THEME ─── */
+/* ─── WEATHER FILTER — PROFESSIONAL RED ─── */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div {
-    background: rgba(255, 0, 0, 0.06) !important;
-    border: 1px solid rgba(255, 0, 0, 0.35) !important;
+    background: #fff5f5 !important;
+    border: 1.5px solid #d32f2f !important;
     border-radius: 10px !important;
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
+/* Focus */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div:focus-within {
-    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.3) !important;
-    border-color: rgba(255, 0, 0, 0.7) !important;
+    border: 1.8px solid #b71c1c !important;
+    box-shadow: 0 0 0 2px rgba(211,47,47,0.15) !important;
 }
 
-/* Weather tags */
+/* Selected tags */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] {
-    background: linear-gradient(135deg, rgba(255,0,0,0.35), rgba(180,0,0,0.2)) !important;
-    border: 1px solid rgba(255, 0, 0, 0.7) !important;
-    color: #ffb3b3 !important;
+    background: #d32f2f !important;
+    border: 1px solid #b71c1c !important;
+    color: #ffffff !important;
     font-weight: 600 !important;
+    border-radius: 6px !important;
 }
 
-/* Weather hover */
+/* Dropdown hover */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) li:hover {
-    background: rgba(255, 0, 0, 0.12) !important;
-    color: #ffb3b3 !important;
+    background: #ffebee !important;
+    color: #000000 !important;
 }
 
-/* Weather label */
+/* Label */
 [data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) label {
-    color: #ff4d4d !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
 }
             
 /* ─── Sidebar filter section dividers ─────────── */
