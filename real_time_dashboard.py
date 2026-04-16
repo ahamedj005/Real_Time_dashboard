@@ -39,6 +39,8 @@ st.markdown("""
     --accent-green:  #00d4aa;
     --accent-orange: #ff8c42;
     --accent-purple: #a78bfa;
+    --accent-cyan:   #00c8e0;
+    --accent-amber:  #f5a623;
     --gradient-rev:  linear-gradient(135deg, #1a3a6b 0%, #0f2444 60%, #0a1a33 100%);
     --gradient-ord:  linear-gradient(135deg, #0d4f3c 0%, #063328 60%, #041f1a 100%);
     --gradient-avg:  linear-gradient(135deg, #5a2d00 0%, #3d1e00 60%, #241100 100%);
@@ -108,27 +110,135 @@ h2, h3 {
     padding: 0.4rem 0.75rem;
 }
 
-/* Sidebar multiselect */
-[data-testid="stSidebar"] [data-testid="stMultiSelect"] > div {
-    background: rgba(255,255,255,0.04) !important;
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    border-radius: 8px !important;
+/* ─── CITY FILTER — Teal / Cyan Professional ──── */
+/* Multiselect container */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div {
+    background: rgba(0, 200, 224, 0.06) !important;
+    border: 1px solid rgba(0, 200, 224, 0.35) !important;
+    border-radius: 10px !important;
     color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0px rgba(0,200,224,0.2);
+    transition: box-shadow 0.2s ease;
 }
 
-[data-testid="stSidebar"] [data-testid="stMultiSelect"] span[data-baseweb="tag"] {
-    background: rgba(79,142,247,0.25) !important;
-    border: 1px solid rgba(79,142,247,0.5) !important;
-    border-radius: 4px !important;
-    color: #a0bfff !important;
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) > div:focus-within {
+    box-shadow: 0 0 0 2px rgba(0,200,224,0.3) !important;
+    border-color: rgba(0,200,224,0.6) !important;
+}
+
+/* City tags */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] {
+    background: linear-gradient(135deg, rgba(0,200,224,0.28), rgba(0,180,200,0.18)) !important;
+    border: 1px solid rgba(0, 200, 224, 0.55) !important;
+    border-radius: 6px !important;
+    color: #7ef5ff !important;
     font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(0,200,224,0.4);
+}
+
+/* City tag close button */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) span[data-baseweb="tag"] svg {
+    fill: rgba(0,200,224,0.75) !important;
+}
+
+/* City dropdown items hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) li[aria-selected="false"]:hover {
+    background: rgba(0,200,224,0.12) !important;
+    color: #7ef5ff !important;
+}
+
+/* City label */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(1) label {
+    color: #00c8e0 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ─── WEATHER FILTER — Amber / Gold Professional ─ */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div {
+    background: rgba(245, 166, 35, 0.06) !important;
+    border: 1px solid rgba(245, 166, 35, 0.35) !important;
+    border-radius: 10px !important;
+    color: var(--text-primary) !important;
+    box-shadow: 0 0 0 0px rgba(245,166,35,0.2);
+    transition: box-shadow 0.2s ease;
+}
+
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) > div:focus-within {
+    box-shadow: 0 0 0 2px rgba(245,166,35,0.3) !important;
+    border-color: rgba(245,166,35,0.65) !important;
+}
+
+/* Weather tags */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] {
+    background: linear-gradient(135deg, rgba(245,166,35,0.30), rgba(220,140,20,0.18)) !important;
+    border: 1px solid rgba(245, 166, 35, 0.60) !important;
+    border-radius: 6px !important;
+    color: #ffd77a !important;
+    font-size: 0.78rem !important;
+    font-weight: 600 !important;
+    text-shadow: 0 0 8px rgba(245,166,35,0.4);
+}
+
+/* Weather tag close button */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) span[data-baseweb="tag"] svg {
+    fill: rgba(245,166,35,0.75) !important;
+}
+
+/* Weather dropdown items hover */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) li[aria-selected="false"]:hover {
+    background: rgba(245,166,35,0.12) !important;
+    color: #ffd77a !important;
+}
+
+/* Weather label */
+[data-testid="stSidebar"] [data-testid="stMultiSelect"]:nth-of-type(2) label {
+    color: #f5a623 !important;
+    font-size: 0.78rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+}
+
+/* ─── Sidebar filter section dividers ─────────── */
+.filter-section-city {
+    background: rgba(0, 200, 224, 0.06);
+    border: 1px solid rgba(0, 200, 224, 0.2);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-section-weather {
+    background: rgba(245, 166, 35, 0.06);
+    border: 1px solid rgba(245, 166, 35, 0.2);
+    border-radius: 10px;
+    padding: 0.6rem 0.75rem 0.25rem 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.filter-label-city {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #00c8e0;
+    margin-bottom: 0.4rem;
+}
+
+.filter-label-weather {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.4px;
+    color: #f5a623;
+    margin-bottom: 0.4rem;
 }
 
 /* Sidebar slider */
-[data-testid="stSidebar"] [data-testid="stSlider"] [data-testid="stTickBar"] {
-    color: var(--text-muted) !important;
-}
-
 [data-testid="stSidebar"] [data-testid="stSlider"] div[role="slider"] {
     background: var(--accent-blue) !important;
     border-color: var(--accent-blue) !important;
@@ -156,7 +266,6 @@ h2, h3 {
 }
 
 /* ─── KPI METRIC CARDS ────────────────────────── */
-/* Revenue card — Blue */
 [data-testid="stMetric"]:nth-child(1) {
     background: var(--gradient-rev) !important;
     border: 1px solid rgba(79,142,247,0.35) !important;
@@ -176,7 +285,6 @@ h2, h3 {
     border-radius: 14px 14px 0 0;
 }
 
-/* Orders card — Green */
 [data-testid="stMetric"]:nth-child(2) {
     background: var(--gradient-ord) !important;
     border: 1px solid rgba(0,212,170,0.35) !important;
@@ -196,7 +304,6 @@ h2, h3 {
     border-radius: 14px 14px 0 0;
 }
 
-/* Avg Order card — Orange */
 [data-testid="stMetric"]:nth-child(3) {
     background: var(--gradient-avg) !important;
     border: 1px solid rgba(255,140,66,0.35) !important;
@@ -216,7 +323,6 @@ h2, h3 {
     border-radius: 14px 14px 0 0;
 }
 
-/* KPI label & value text */
 [data-testid="stMetric"] label {
     color: var(--text-muted) !important;
     font-size: 0.78rem !important;
@@ -313,6 +419,31 @@ hr {
 ::-webkit-scrollbar-track { background: var(--bg-primary); }
 ::-webkit-scrollbar-thumb { background: rgba(79,142,247,0.35); border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(79,142,247,0.6); }
+
+/* ─── Refresh badge ───────────────────────────── */
+.refresh-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.72rem;
+    color: #00c8e0;
+    background: rgba(0,200,224,0.1);
+    border: 1px solid rgba(0,200,224,0.25);
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+.refresh-dot {
+    width: 6px; height: 6px;
+    background: #00c8e0;
+    border-radius: 50%;
+    animation: pulse 1.2s ease-in-out infinite;
+}
+@keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50%       { opacity: 0.4; transform: scale(0.7); }
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -360,7 +491,16 @@ PLOTLY_TEMPLATE = go.layout.Template(
 # -------------------------------------------------
 # TITLE
 # -------------------------------------------------
-st.title("🚀 Enterprise Live Revenue Pulse")
+col_title, col_badge = st.columns([6, 1])
+with col_title:
+    st.title("🚀 Enterprise Live Revenue Pulse")
+with col_badge:
+    st.markdown(
+        '<div style="padding-top:0.6rem">'
+        '<span class="refresh-badge"><span class="refresh-dot"></span>LIVE · 5s</span>'
+        '</div>',
+        unsafe_allow_html=True
+    )
 
 # -------------------------------------------------
 # SESSION STATE INIT
@@ -390,19 +530,40 @@ st.sidebar.markdown("""
 st.session_state.running = st.sidebar.toggle("▶️ Run Simulation", value=True)
 
 st.sidebar.markdown("<br>", unsafe_allow_html=True)
-refresh_rate = st.sidebar.slider("⏱ Refresh Speed (sec)", 5, 60, 15)
+refresh_rate = st.sidebar.slider("⏱ Refresh Speed (sec)", 5, 60, 5)   # ← DEFAULT 5s
 
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
+# ── City Filter ─────────────────────────────────
+st.sidebar.markdown("""
+<div style="margin-top:1.2rem; margin-bottom:0.3rem;">
+  <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+               letter-spacing:1.4px; color:#00c8e0;">
+    🏙 Filter by City
+  </span>
+</div>
+""", unsafe_allow_html=True)
+
 city_filter = st.sidebar.multiselect(
-    "🏙 Filter by City",
-    ["Chennai", "Bangalore", "Hyderabad", "Mumbai", "Delhi", "Pune"],
-    default=[]
+    label="Filter by City",
+    options=["Chennai", "Bangalore", "Hyderabad", "Mumbai", "Delhi", "Pune"],
+    default=[],
+    label_visibility="collapsed",
 )
 
+# ── Weather Filter ───────────────────────────────
+st.sidebar.markdown("""
+<div style="margin-top:1.1rem; margin-bottom:0.3rem;">
+  <span style="font-size:0.7rem; font-weight:700; text-transform:uppercase;
+               letter-spacing:1.4px; color:#f5a623;">
+    🌦 Filter by Weather
+  </span>
+</div>
+""", unsafe_allow_html=True)
+
 weather_filter = st.sidebar.multiselect(
-    "🌦 Filter by Weather",
-    ["Rain 🌧️", "Cloudy ☁️", "Heat ☀️", "Normal 🌤️", "Unknown"],
-    default=[]
+    label="Filter by Weather",
+    options=["Rain 🌧️", "Cloudy ☁️", "Heat ☀️", "Normal 🌤️", "Unknown"],
+    default=[],
+    label_visibility="collapsed",
 )
 
 st.sidebar.markdown("""
@@ -416,13 +577,13 @@ st.sidebar.markdown("""
     color: #8a96b0;
     line-height: 1.6;
 ">
-📡 Live data streams every <b style='color:#4f8ef7'>refresh cycle</b>.<br>
+📡 Live data streams every <b style='color:#4f8ef7'>5 seconds</b>.<br>
 All transactions are stored in <b style='color:#4f8ef7'>sales.db</b>.
 </div>
 """, unsafe_allow_html=True)
 
 if st.session_state.running:
-    st_autorefresh(interval=refresh_rate * 1000, key="refresh")
+    st_autorefresh(interval=refresh_rate * 1000, key="refresh")   # ← uses slider value (default 5s)
 
 # -------------------------------------------------
 # DATABASE (cached connection)
