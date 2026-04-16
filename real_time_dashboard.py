@@ -15,26 +15,39 @@ st.set_page_config(
     page_icon="📊"
 )
 
-# Inject a soft professional background
+# Soft, professional background + matching colors
 st.markdown(
     """
     <style>
     .stApp {
-        background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
-        color: #2c3e50;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        color: #1e293b;
     }
     .stApp header {
         background: transparent !important;
     }
+
+    /* Professional blue primary button */
     .stButton button {
-        background-color: #2980b9;
+        background-color: #2563eb;
         color: white;
         border-radius: 8px;
         border: none;
-        box-shadow: 0 2px 6px rgba(41, 128, 185, 0.2);
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
     }
     .stButton button:hover {
-        background-color: #1f6aa5;
+        background-color: #1d4ed8;
+    }
+
+    /* Slightly card‑like dividers */
+    .stDivider {
+        border-color: #cbd5e1;
+    }
+
+    /* Table background */
+    .stDataframe {
+        border-radius: 8px;
+        overflow: hidden;
     }
     </style>
     """,
@@ -153,7 +166,9 @@ if not df.empty:
         fig1.update_layout(
             font=dict(family="Arial", size=12),
             title=dict(font=dict(size=16)),
-            showlegend=False
+            showlegend=False,
+            plot_bgcolor="rgba(0,0,0,0)",
+            paper_bgcolor="rgba(0,0,0,0)"
         )
         st.plotly_chart(fig1, use_container_width=True)
 
@@ -164,6 +179,10 @@ if not df.empty:
             title="Sales by Product"
         )
         fig2.update_traces(textinfo="percent+label")
+        fig2.update_layout(
+            font=dict(family="Arial", size=12),
+            title=dict(font=dict(size=16))
+        )
         st.plotly_chart(fig2, use_container_width=True)
 
     st.subheader("Live Data")
