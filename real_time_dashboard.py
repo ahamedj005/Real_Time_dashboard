@@ -15,7 +15,7 @@ st.set_page_config(
     page_icon="📊"
 )
 
-# Full‑page soft blue‑gray background + matching sidebar
+# Full‑page soft blue‑gray background + matching sidebar + cleaner chart spacing
 st.markdown(
     """
     <style>
@@ -73,6 +73,12 @@ st.markdown(
     .stDataframe {
         border-radius: 8px;
         overflow: hidden;
+    }
+
+    /* More generous spacing around charts */
+    .stPlotlyChart {
+        margin-top: 0.5rem;
+        margin-bottom: 1.2rem;
     }
     </style>
     """,
@@ -250,56 +256,79 @@ if not df.empty:
         trend,
         x="minute",
         y="price",
-        title="Revenue Trend (Per Minute)"
+        title=None
     )
     fig_trend.update_layout(
         font=dict(family="Arial", size=12),
-        title=dict(font=dict(size=16)),
         xaxis_title="Time",
-        yaxis_title="Revenue (₹)"
+        yaxis_title="Revenue (₹)",
+        title_x=0.5,
+        margin=dict(t=10, b=80, l=50, r=30)
     )
-    st.plotly_chart(fig_trend, use_container_width=True, height=400)
+    st.plotly_chart(fig_trend, use_container_width=True, height=450)
     st.markdown("---")
 
     # █████ Sales by City █████
-    st.subheader("📍 Sales by City")
-    st.markdown("")
+    st.subheader("📍 Revenue by City")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.6rem;'>"
+                "Total revenue distribution across cities.",
+                unsafe_allow_html=True)
 
     fig_city = px.bar(
         df,
         x="city",
         y="price",
         color="city",
-        title="Sales by City"
+        title=None
     )
     fig_city.update_layout(
         font=dict(family="Arial", size=12),
-        title=dict(font=dict(size=16)),
-        showlegend=False
+        showlegend=False,
+        xaxis_title="City",
+        yaxis_title="Revenue (₹)",
+        margin=dict(t=10, b=70, l=60, r=30)
     )
-    st.plotly_chart(fig_city, use_container_width=True, height=400)
+    st.plotly_chart(fig_city, use_container_width=True, height=450)
     st.markdown("---")
 
     # █████ Sales by Product █████
-    st.subheader("📦 Sales by Product")
-    st.markdown("")
+    st.subheader("📦 Product Revenue Breakdown")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.6rem;'>"
+                "Distribution of total revenue across products.",
+                unsafe_allow_html=True)
 
     fig_product = px.pie(
         df,
         names="product",
-        title="Sales by Product"
+        values="price",
+        title=None
     )
-    fig_product.update_traces(textinfo="percent+label")
+    fig_product.update_traces(
+        textinfo="percent+label",
+        textposition="outside",
+        pull=[0.05 if i < 8 else 0 for i in range(len(df["product"].unique()))]
+    )
     fig_product.update_layout(
         font=dict(family="Arial", size=12),
-        title=dict(font=dict(size=16))
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.2,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=11)
+        ),
+        margin=dict(t=10, b=80, l=20, r=20),
+        showlegend=True
     )
-    st.plotly_chart(fig_product, use_container_width=True, height=400)
+    st.plotly_chart(fig_product, use_container_width=True, height=450)
     st.markdown("---")
 
     # █████ Top 8 Products by Revenue █████
     st.subheader("🔥 Top 8 Products by Revenue")
-    st.markdown("")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.6rem;'>"
+                "Top‑performing products by revenue contribution.",
+                unsafe_allow_html=True)
 
     top_products = df.groupby("product")["price"].sum().reset_index()
     top_products = top_products.sort_values("price", ascending=False).head(8)
@@ -308,16 +337,18 @@ if not df.empty:
         top_products,
         x="product",
         y="price",
-        title="Top 8 Products by Revenue",
+        title=None,
         color="product"
     )
     fig_top.update_layout(
         font=dict(family="Arial", size=10),
-        title=dict(font=dict(size=15)),
+        xaxis_title="Product",
+        yaxis_title="Revenue (₹)",
+        xaxis_tickangle=-45,
         showlegend=False,
-        xaxis_tickangle=-45
+        margin=dict(t=10, b=90, l=60, r=30)
     )
-    st.plotly_chart(fig_top, use_container_width=True, height=400)
+    st.plotly_chart(fig_top, use_container_width=True, height=450)
     st.markdown("---")
 
     st.subheader("📊 Live Data")
