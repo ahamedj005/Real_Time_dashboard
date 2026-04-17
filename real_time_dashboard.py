@@ -272,7 +272,12 @@ else:
 
     col1.metric("Revenue", f"₹{df_filtered['price'].sum():,}")
     col2.metric("Orders", len(df_filtered))
-    col3.metric("Avg", f"₹{int(df_filtered['price'].mean())}")
+
+    # Safe Avg calculation to avoid ValueError on empty data
+    avg_price = df_filtered["price"].mean()
+    avg_str = f"₹{int(avg_price)}" if pd.notna(avg_price) else "₹—"
+    col3.metric("Avg", avg_str)
+
     col4.metric("Cities", df_filtered['city'].nunique())
 
     st.markdown("---")
@@ -283,23 +288,26 @@ else:
                 "Revenue trend over time (per minute).",
                 unsafe_allow_html=True)
 
-    df_trend = df_filtered.copy()
-    df_trend["minute"] = df_trend["time"].dt.floor("1min")
-    trend = df_trend.groupby("minute")["price"].sum().reset_index()
+    if not df_filtered.empty:
+        df_trend = df_filtered.copy()
+        df_trend["minute"] = df_trend["time"].dt.floor("1min")
+        trend = df_trend.groupby("minute")["price"].sum().reset_index()
 
-    fig_trend = px.line(
-        trend,
-        x="minute",
-        y="price",
-        title=None
-    )
-    fig_trend.update_layout(
-        font=dict(family="Arial", size=12),
-        xaxis_title="Time",
-        yaxis_title="Revenue (₹)",
-        margin=dict(t=10, b=80, l=60, r=30)
-    )
-    st.plotly_chart(fig_trend, use_container_width=True, height=450)
+        fig_trend = px.line(
+            trend,
+            x="minute",
+            y="price",
+            title=None
+        )
+        fig_trend.update_layout(
+            font=dict(family="Arial", size=12),
+            xaxis_title="Time",
+            yaxis_title="Revenue (₹)",
+            margin=dict(t=10, b=80, l=60, r=30)
+        )
+        st.plotly_chart(fig_trend, use_container_width=True, height=450)
+    else:
+        st.info("No data for the selected filters.")
     st.markdown("---")
 
     # 📍 Revenue by City
@@ -308,21 +316,24 @@ else:
                 "Revenue distribution across cities.",
                 unsafe_allow_html=True)
 
-    fig_city = px.bar(
-        df_filtered,
-        x="city",
-        y="price",
-        color="city",
-        title=None
-    )
-    fig_city.update_layout(
-        font=dict(family="Arial", size=12),
-        showlegend=False,
-        xaxis_title="City",
-        yaxis_title="Revenue (₹)",
-        margin=dict(t=10, b=70, l=60, r=30)
-    )
-    st.plotly_chart(fig_city, use_container_width=True, height=450)
+    if not df_filtered.empty:
+        fig_city = px.bar(
+            df_filtered,
+            x="city",
+            y="price",
+            color="city",
+            title=None
+        )
+        fig_city.update_layout(
+            font=dict(family="Arial", size=12),
+            showlegend=False,
+            xaxis_title="City",
+            yaxis_title="Revenue (₹)",
+            margin=dict(t=10, b=70, l=60, r=30)
+        )
+        st.plotly_chart(fig_city, use_container_width=True, height=450)
+    else:
+        st.info("No data for the selected filters.")
     st.markdown("---")
 
     # 📦 Product Revenue Breakdown (Pie)
@@ -331,33 +342,36 @@ else:
                 "Distribution of total revenue across products.",
                 unsafe_allow_html=True)
 
-    fig_product = px.pie(
-        df_filtered,
-        names="product",
-        values="price",
-        title=None
-    )
-    fig_product.update_traces(
-        textinfo="label+percent",
-        textposition="outside",
-        pull=[0.05 if i < 5 else 0 for i in range(len(df_filtered["product"].unique()))]
-    )
-    fig_product.update_layout(
-        font=dict(family="Arial", size=10),
-        margin=dict(t=40, b=140, l=60, r=60),
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.5,
-            xanchor="center",
-            x=0.5,
-            font=dict(size=9)
-        ),
-        showlegend=True,
-        title_x=0.5,
-        title_y=0.95
-    )
-    st.plotly_chart(fig_product, use_container_width=True, height=550)
+    if not df_filtered.empty:
+        fig_product = px.pie(
+            df_filtered,
+            names="product",
+            values="price",
+            title=None
+        )
+        fig_product.update_traces(
+            textinfo="label+percent",
+            textposition="outside",
+            pull=[0.05 if i < 5 else 0 for i in range(len(df_filtered["product"].unique()))]
+        )
+        fig_product.update_layout(
+            font=dict(family="Arial", size=10),
+            margin=dict(t=40, b=140, l=60, r=60),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.5,
+                xanchor="center",
+                x=0.5,
+                font=dict(size=9)
+            ),
+            showlegend=True,
+            title_x=0.5,
+            title_y=0.95
+        )
+        st.plotly_chart(fig_product, use_container_width=True, height=550)
+    else:
+        st.info("No data for the selected filters.")
     st.markdown("---")
 
     # 🔥 Top 8 Products by Revenue
@@ -366,25 +380,28 @@ else:
                 "Top‑performing products by revenue contribution.",
                 unsafe_allow_html=True)
 
-    top_products = df_filtered.groupby("product")["price"].sum().reset_index()
-    top_products = top_products.sort_values("price", ascending=False).head(8)
+    if not df_filtered.empty:
+        top_products = df_filtered.groupby("product")["price"].sum().reset_index()
+        top_products = top_products.sort_values("price", ascending=False).head(8)
 
-    fig_top = px.bar(
-        top_products,
-        x="product",
-        y="price",
-        title=None,
-        color="product"
-    )
-    fig_top.update_layout(
-        font=dict(family="Arial", size=10),
-        xaxis_title="Product",
-        yaxis_title="Revenue (₹)",
-        xaxis_tickangle=-45,
-        showlegend=False,
-        margin=dict(t=10, b=90, l=60, r=30)
-    )
-    st.plotly_chart(fig_top, use_container_width=True, height=450)
+        fig_top = px.bar(
+            top_products,
+            x="product",
+            y="price",
+            title=None,
+            color="product"
+        )
+        fig_top.update_layout(
+            font=dict(family="Arial", size=10),
+            xaxis_title="Product",
+            yaxis_title="Revenue (₹)",
+            xaxis_tickangle=-45,
+            showlegend=False,
+            margin=dict(t=10, b=90, l=60, r=30)
+        )
+        st.plotly_chart(fig_top, use_container_width=True, height=450)
+    else:
+        st.info("No data for the selected filters.")
     st.markdown("---")
 
     # 📊 Live Data
