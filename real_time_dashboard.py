@@ -211,7 +211,7 @@ def load_data():
     return df
 
 # -----------------------------
-# REVENUE
+# REVENUE (ALL KPIs + VISUALS ON ONE PAGE)
 # -----------------------------
 st.markdown(
     """
@@ -277,118 +277,123 @@ else:
 
     st.markdown("---")
 
-    # █████ Tabs █████
-    tab_trend, tab_city, tab_product, tab_top, tab_data = st.tabs([
-        "📈 Revenue Trend",
-        "📍 Revenue by City",
-        "📦 Product Revenue Breakdown",
-        "🔥 Top 8 Products",
-        "📊 Live Data"
-    ])
+    # 📈 Revenue Trend
+    st.subheader("📈 Revenue Trend")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
+                "Revenue trend over time (per minute).",
+                unsafe_allow_html=True)
 
-    # --- TAB 1: Revenue Trend ---
-    with tab_trend:
-        st.markdown("#### Revenue Trend (Per Minute)")
+    df_trend = df_filtered.copy()
+    df_trend["minute"] = df_trend["time"].dt.floor("1min")
+    trend = df_trend.groupby("minute")["price"].sum().reset_index()
 
-        df_trend = df_filtered.copy()
-        df_trend["minute"] = df_trend["time"].dt.floor("1min")
-        trend = df_trend.groupby("minute")["price"].sum().reset_index()
+    fig_trend = px.line(
+        trend,
+        x="minute",
+        y="price",
+        title=None
+    )
+    fig_trend.update_layout(
+        font=dict(family="Arial", size=12),
+        xaxis_title="Time",
+        yaxis_title="Revenue (₹)",
+        margin=dict(t=10, b=80, l=60, r=30)
+    )
+    st.plotly_chart(fig_trend, use_container_width=True, height=450)
+    st.markdown("---")
 
-        fig_trend = px.line(
-            trend,
-            x="minute",
-            y="price",
-            title=None
-        )
-        fig_trend.update_layout(
-            font=dict(family="Arial", size=12),
-            xaxis_title="Time",
-            yaxis_title="Revenue (₹)",
-            margin=dict(t=10, b=80, l=60, r=30)
-        )
-        st.plotly_chart(fig_trend, use_container_width=True, height=450)
+    # 📍 Revenue by City
+    st.subheader("📍 Revenue by City")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
+                "Revenue distribution across cities.",
+                unsafe_allow_html=True)
 
-    # --- TAB 2: Revenue by City ---
-    with tab_city:
-        st.markdown("#### Revenue by City")
+    fig_city = px.bar(
+        df_filtered,
+        x="city",
+        y="price",
+        color="city",
+        title=None
+    )
+    fig_city.update_layout(
+        font=dict(family="Arial", size=12),
+        showlegend=False,
+        xaxis_title="City",
+        yaxis_title="Revenue (₹)",
+        margin=dict(t=10, b=70, l=60, r=30)
+    )
+    st.plotly_chart(fig_city, use_container_width=True, height=450)
+    st.markdown("---")
 
-        fig_city = px.bar(
-            df_filtered,
-            x="city",
-            y="price",
-            color="city",
-            title=None
-        )
-        fig_city.update_layout(
-            font=dict(family="Arial", size=12),
-            showlegend=False,
-            xaxis_title="City",
-            yaxis_title="Revenue (₹)",
-            margin=dict(t=10, b=70, l=60, r=30)
-        )
-        st.plotly_chart(fig_city, use_container_width=True, height=450)
+    # 📦 Product Revenue Breakdown (Pie)
+    st.subheader("📦 Product Revenue Breakdown")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
+                "Distribution of total revenue across products.",
+                unsafe_allow_html=True)
 
-    # --- TAB 3: Product Revenue Breakdown (Pie) ---
-    with tab_product:
-        st.markdown("#### Product Revenue Breakdown")
+    fig_product = px.pie(
+        df_filtered,
+        names="product",
+        values="price",
+        title=None
+    )
+    fig_product.update_traces(
+        textinfo="label+percent",
+        textposition="outside",
+        pull=[0.05 if i < 5 else 0 for i in range(len(df_filtered["product"].unique()))]
+    )
+    fig_product.update_layout(
+        font=dict(family="Arial", size=10),
+        margin=dict(t=40, b=140, l=60, r=60),
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.5,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=9)
+        ),
+        showlegend=True,
+        title_x=0.5,
+        title_y=0.95
+    )
+    st.plotly_chart(fig_product, use_container_width=True, height=550)
+    st.markdown("---")
 
-        fig_product = px.pie(
-            df_filtered,
-            names="product",
-            values="price",
-            title=None
-        )
-        fig_product.update_traces(
-            textinfo="label+percent",
-            textposition="outside",
-            pull=[0.05 if i < 5 else 0 for i in range(len(df_filtered["product"].unique()))]
-        )
-        fig_product.update_layout(
-            font=dict(family="Arial", size=10),
-            margin=dict(t=40, b=140, l=60, r=60),
-            legend=dict(
-                orientation="h",
-                yanchor="bottom",
-                y=-0.5,
-                xanchor="center",
-                x=0.5,
-                font=dict(size=9)
-            ),
-            showlegend=True,
-            title_x=0.5,
-            title_y=0.95
-        )
-        st.plotly_chart(fig_product, use_container_width=True, height=550)
+    # 🔥 Top 8 Products by Revenue
+    st.subheader("🔥 Top 8 Products by Revenue")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
+                "Top‑performing products by revenue contribution.",
+                unsafe_allow_html=True)
 
-    # --- TAB 4: Top 8 Products by Revenue ---
-    with tab_top:
-        st.markdown("#### Top 8 Products by Revenue")
+    top_products = df_filtered.groupby("product")["price"].sum().reset_index()
+    top_products = top_products.sort_values("price", ascending=False).head(8)
 
-        top_products = df_filtered.groupby("product")["price"].sum().reset_index()
-        top_products = top_products.sort_values("price", ascending=False).head(8)
+    fig_top = px.bar(
+        top_products,
+        x="product",
+        y="price",
+        title=None,
+        color="product"
+    )
+    fig_top.update_layout(
+        font=dict(family="Arial", size=10),
+        xaxis_title="Product",
+        yaxis_title="Revenue (₹)",
+        xaxis_tickangle=-45,
+        showlegend=False,
+        margin=dict(t=10, b=90, l=60, r=30)
+    )
+    st.plotly_chart(fig_top, use_container_width=True, height=450)
+    st.markdown("---")
 
-        fig_top = px.bar(
-            top_products,
-            x="product",
-            y="price",
-            title=None,
-            color="product"
-        )
-        fig_top.update_layout(
-            font=dict(family="Arial", size=10),
-            xaxis_title="Product",
-            yaxis_title="Revenue (₹)",
-            xaxis_tickangle=-45,
-            showlegend=False,
-            margin=dict(t=10, b=90, l=60, r=30)
-        )
-        st.plotly_chart(fig_top, use_container_width=True, height=450)
+    # 📊 Live Data
+    st.subheader("📊 Live Data")
+    st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
+                "Latest transactions in your dataset.",
+                unsafe_allow_html=True)
 
-    # --- TAB 5: Live Data ---
-    with tab_data:
-        st.markdown("#### Live Data")
-
-        st.dataframe(df_filtered.tail(20), use_container_width=True)
+    st.dataframe(df_filtered.tail(20), use_container_width=True)
 
 # -----------------------------
 # EXPORT
