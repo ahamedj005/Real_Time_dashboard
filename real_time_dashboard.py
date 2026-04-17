@@ -165,7 +165,7 @@ st.sidebar.title("🚀 Revenue War Room")
 now = datetime.now()
 today = now.date()
 
-# Default date range: last 7 days → today (you can change, but no hard limits)
+# Default date range: last 7 days → today
 min_date = today - timedelta(days=7)
 
 date_range = st.sidebar.date_input(
@@ -334,7 +334,7 @@ else:
         st.info("No data for the selected filters.")
     st.markdown("---")
 
-    # 📦 Product Revenue Breakdown (Pie)
+    # 📦 Product Revenue Breakdown (Pie) — DARKER, CLEARER FONT
     st.subheader("📦 Product Revenue Breakdown")
     st.markdown("<p style='color:#475569; font-size:0.9rem; margin-top:-0.6rem; margin-bottom:0.4rem;'>"
                 "Distribution of total revenue across products.",
@@ -350,6 +350,12 @@ else:
         fig_product.update_traces(
             textinfo="label+percent",
             textposition="outside",
+            # Make labels dark and bold for better visibility
+            textfont=dict(
+                color="#1e293b",      # dark text
+                size=12,
+                family="Arial"
+            ),
             pull=[0.05 if i < 5 else 0 for i in range(len(df_filtered["product"].unique()))]
         )
         fig_product.update_layout(
