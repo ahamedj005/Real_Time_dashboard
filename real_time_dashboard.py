@@ -100,12 +100,40 @@ init_db()
 # -----------------------------
 # DATA
 # -----------------------------
-products = ["Laptop","Mobile","Tablet","Camera","Headphones","Watch"]
+# Many more products with variants
+products = [
+    "Laptop (15\")", "Laptop (13\")", "Gaming Laptop", "Ultrabook",
+    "Mobile - Budget", "Mobile - Mid", "Mobile - Flagship",
+    "Tablet 8\"", "Tablet 10\"",
+    "DSLR Camera", "Mirrorless Camera", "Action Camera",
+    "Wireless Headphones", "Wired Headphones", "Earbuds",
+    "Smart Watch", "Fitness Watch",
+    "Desktop PC", "All‑in‑One PC",
+    "Monitor 24\"", "Monitor 27\"",
+    "Mechanical Keyboard", "Membrane Keyboard",
+    "Gaming Mouse", "Office Mouse",
+    "Inkjet Printer", "Laser Printer",
+    "Wi‑Fi Router", "Mesh Router",
+    "External HDD 1TB", "External HDD 2TB",
+    "SSD 500GB", "SSD 1TB",
+    "Power Bank 10000mAh", "Power Bank 20000mAh",
+    "Smart Speaker", "Home Speaker",
+    "DJI Drone", "Camera Drone"
+]
 
+# Many more cities
 cities = [
-    "Chennai", "Mumbai", "Delhi", "Bangalore", "Hyderabad",
-    "Kolkata", "Pune", "Jaipur", "Lucknow", "Indore", "Surat",
-    "Visakhapatnam", "Coimbatore", "Madurai", "Trichy"
+    "Chennai", "Madurai", "Trichy", "Coimbatore", "Salem",
+    "Mumbai", "Thane", "Pune", "Nashik", "Nagpur",
+    "Delhi", "Noida", "Gurgaon", "Faridabad",
+    "Bangalore", "Mysore", "Hubli", "Mangalore",
+    "Hyderabad", "Warangal", "Vijayawada", "Visakhapatnam",
+    "Kolkata", "Siliguri", "Durgapur",
+    "Jaipur", "Udaipur", "Jodhpur",
+    "Lucknow", "Kanpur", "Prayagraj",
+    "Indore", "Bhopal", "Ujjain",
+    "Surat", "Vadodara", "Rajkot",
+    "Patna", "Bhubaneswar", "Guwahati"
 ]
 
 weather_types = ["Clear", "Rain", "Clouds", "Heat", "Storm"]
@@ -125,10 +153,10 @@ def sale():
 # -----------------------------
 # SIDEBAR FILTERS
 # -----------------------------
-st.sidebar.title("📊 Control Panel")
+st.sidebar.title("🚀 Revenue War Room")
 
-# Show current date and time in sidebar
 now = datetime.now()
+
 st.sidebar.markdown(
     f"<div style='color:#475569; font-size:0.9rem; margin-bottom:0.8rem;'>"
     f"Date: {now.strftime('%Y-%m-%d')}<br/>"
@@ -149,31 +177,42 @@ selected_weather = st.sidebar.multiselect(
     default=weather_types
 )
 
-refresh = st.sidebar.slider("Refresh (sec)", 5, 60, 10)
+# Default 30 seconds, but can be changed
+refresh = st.sidebar.slider("Refresh (sec)", 5, 60, 30)
 st_autorefresh(interval=refresh * 1000, key="auto")
 
 # -----------------------------
 # SAFE DB READ
 # -----------------------------
 def load_data():
-    return pd.read_sql("SELECT * FROM sales", conn)
+    df = pd.read_sql("SELECT * FROM sales", conn)
+    if not df.empty:
+        df["time"] = pd.to_datetime(df["time"])
+    return df
 
 # -----------------------------
 # REVENUE
 # -----------------------------
 st.markdown(
-    "<h1 style='font-size:1.8rem; margin-bottom:0.5rem;'>"
-    "📊 Revenue Command Center PRO"
-    "</h1>",
+    """
+    <h1 style='font-size:1.8rem; margin-bottom:0.2rem;'>
+        🚀 Revenue Command Center PRO
+    </h1>
+    <p style='color:#475569; font-size:0.9rem; margin-top:-0.5rem; margin-bottom:0.8rem;'>
+        War‑Room View • For Manager Use Only
+    </p>
+    """,
     unsafe_allow_html=True
 )
 
 st.markdown(
-    f"<p style='color:#475569; font-size:0.9rem; margin-top:-0.5rem;'>"
+    f"<p style='color:#475569; font-size:0.9rem; margin-top:-0.5rem; margin-bottom:0.5rem;'>"
     f"Today: {now.strftime('%Y-%m-%d')} &nbsp; • &nbsp; "
     f"Live time: {now.strftime('%H:%M:%S')}</p>",
     unsafe_allow_html=True
 )
+
+st.markdown("### 🎯 Executive Snapshot")
 
 # Insert one dummy sale every refresh
 cursor.execute("INSERT INTO sales VALUES (?,?,?,?,?)", sale())
@@ -197,37 +236,79 @@ if not df.empty:
 
     st.divider()
 
-    c1, c2 = st.columns(2)
+    # █████ Revenue Trend (Time Series) █████
+    st.subheader("📈 Revenue Trend")
+
+    # Aggregate by minute
+    df_trend = df.copy()
+    df_trend["minute"] = df_trend["time"].dt.floor("1min")
+    trend = df_trend.groupby("minute")["price"].sum().reset_index()
+
+    fig_trend = px.line(
+        trend,
+        x="minute",
+        y="price",
+        title="Revenue Trend (Per Minute)"
+    )
+    fig_trend.update_layout(
+        font=dict(family="Arial", size=12),
+        title=dict(font=dict(size=16)),
+        xaxis_title="Time",
+        yaxis_title="Revenue (₹)"
+    )
+    st.plotly_chart(fig_trend, use_container_width=True)
+
+    # █████ City & Product charts █████
+    st.divider()
+    st.subheader("📊 Sales Overview")
+
+    c1, c2, c3 = st.columns(3)
 
     with c1:
-        fig1 = px.bar(
+        fig_city = px.bar(
             df,
             x="city",
             y="price",
             color="city",
             title="Sales by City"
         )
-        fig1.update_layout(
+        fig_city.update_layout(
             font=dict(family="Arial", size=12),
             title=dict(font=dict(size=16)),
-            showlegend=False,
-            plot_bgcolor="rgba(0,0,0,0)",
-            paper_bgcolor="rgba(0,0,0,0)"
+            showlegend=False
         )
-        st.plotly_chart(fig1, use_container_width=True)
+        st.plotly_chart(fig_city, use_container_width=True)
 
     with c2:
-        fig2 = px.pie(
+        fig_product = px.pie(
             df,
             names="product",
             title="Sales by Product"
         )
-        fig2.update_traces(textinfo="percent+label")
-        fig2.update_layout(
+        fig_product.update_traces(textinfo="percent+label")
+        fig_product.update_layout(
             font=dict(family="Arial", size=12),
             title=dict(font=dict(size=16))
         )
-        st.plotly_chart(fig2, use_container_width=True)
+        st.plotly_chart(fig_product, use_container_width=True)
+
+    with c3:
+        top_products = df.groupby("product")["price"].sum().reset_index()
+        top_products = top_products.sort_values("price", ascending=False).head(8)
+
+        fig_top = px.bar(
+            top_products,
+            x="product",
+            y="price",
+            title="Top 8 Products by Revenue",
+            color="product"
+        )
+        fig_top.update_layout(
+            font=dict(family="Arial", size=10),
+            title=dict(font=dict(size=15)),
+            showlegend=False
+        )
+        st.plotly_chart(fig_top, use_container_width=True)
 
     st.subheader("Live Data")
     st.dataframe(df.tail(10), use_container_width=True)
