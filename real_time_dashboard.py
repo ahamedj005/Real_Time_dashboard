@@ -39,7 +39,8 @@ st.markdown(
     /* Sidebar text color */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] .stMarkdown,
-    [data-testid="stSidebar"] label {
+    [data-testid="stSidebar"] label,
+    [data-testid="stSidebar"] .stButton {
         color: #1e293b;
     }
 
@@ -234,10 +235,11 @@ if not df.empty:
     col3.metric("Avg", f"₹{int(df['price'].mean())}")
     col4.metric("Cities", df['city'].nunique())
 
-    st.divider()
+    st.markdown("---")
 
     # █████ Revenue Trend (Time Series) █████
     st.subheader("📈 Revenue Trend")
+    st.markdown("")
 
     # Aggregate by minute
     df_trend = df.copy()
@@ -256,61 +258,70 @@ if not df.empty:
         xaxis_title="Time",
         yaxis_title="Revenue (₹)"
     )
-    st.plotly_chart(fig_trend, use_container_width=True)
+    st.plotly_chart(fig_trend, use_container_width=True, height=400)
+    st.markdown("---")
 
-    # █████ City & Product charts █████
-    st.divider()
-    st.subheader("📊 Sales Overview")
+    # █████ Sales by City █████
+    st.subheader("📍 Sales by City")
+    st.markdown("")
 
-    c1, c2, c3 = st.columns(3)
+    fig_city = px.bar(
+        df,
+        x="city",
+        y="price",
+        color="city",
+        title="Sales by City"
+    )
+    fig_city.update_layout(
+        font=dict(family="Arial", size=12),
+        title=dict(font=dict(size=16)),
+        showlegend=False
+    )
+    st.plotly_chart(fig_city, use_container_width=True, height=400)
+    st.markdown("---")
 
-    with c1:
-        fig_city = px.bar(
-            df,
-            x="city",
-            y="price",
-            color="city",
-            title="Sales by City"
-        )
-        fig_city.update_layout(
-            font=dict(family="Arial", size=12),
-            title=dict(font=dict(size=16)),
-            showlegend=False
-        )
-        st.plotly_chart(fig_city, use_container_width=True)
+    # █████ Sales by Product █████
+    st.subheader("📦 Sales by Product")
+    st.markdown("")
 
-    with c2:
-        fig_product = px.pie(
-            df,
-            names="product",
-            title="Sales by Product"
-        )
-        fig_product.update_traces(textinfo="percent+label")
-        fig_product.update_layout(
-            font=dict(family="Arial", size=12),
-            title=dict(font=dict(size=16))
-        )
-        st.plotly_chart(fig_product, use_container_width=True)
+    fig_product = px.pie(
+        df,
+        names="product",
+        title="Sales by Product"
+    )
+    fig_product.update_traces(textinfo="percent+label")
+    fig_product.update_layout(
+        font=dict(family="Arial", size=12),
+        title=dict(font=dict(size=16))
+    )
+    st.plotly_chart(fig_product, use_container_width=True, height=400)
+    st.markdown("---")
 
-    with c3:
-        top_products = df.groupby("product")["price"].sum().reset_index()
-        top_products = top_products.sort_values("price", ascending=False).head(8)
+    # █████ Top 8 Products by Revenue █████
+    st.subheader("🔥 Top 8 Products by Revenue")
+    st.markdown("")
 
-        fig_top = px.bar(
-            top_products,
-            x="product",
-            y="price",
-            title="Top 8 Products by Revenue",
-            color="product"
-        )
-        fig_top.update_layout(
-            font=dict(family="Arial", size=10),
-            title=dict(font=dict(size=15)),
-            showlegend=False
-        )
-        st.plotly_chart(fig_top, use_container_width=True)
+    top_products = df.groupby("product")["price"].sum().reset_index()
+    top_products = top_products.sort_values("price", ascending=False).head(8)
 
-    st.subheader("Live Data")
+    fig_top = px.bar(
+        top_products,
+        x="product",
+        y="price",
+        title="Top 8 Products by Revenue",
+        color="product"
+    )
+    fig_top.update_layout(
+        font=dict(family="Arial", size=10),
+        title=dict(font=dict(size=15)),
+        showlegend=False,
+        xaxis_tickangle=-45
+    )
+    st.plotly_chart(fig_top, use_container_width=True, height=400)
+    st.markdown("---")
+
+    st.subheader("📊 Live Data")
+    st.markdown("")
     st.dataframe(df.tail(10), use_container_width=True)
 
 else:
