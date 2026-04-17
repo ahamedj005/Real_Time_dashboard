@@ -165,15 +165,13 @@ st.sidebar.title("🚀 Revenue War Room")
 now = datetime.now()
 today = now.date()
 
-# Auto‑compute date range for user
-min_date = today - timedelta(days=30)
-max_date = today
+# Default date range: last 7 days → today (you can change, but no hard limits)
+min_date = today - timedelta(days=7)
 
 date_range = st.sidebar.date_input(
     "Date Range",
-    value=(min_date, max_date),
-    min_value=min_date - timedelta(days=90),
-    max_value=today
+    value=(min_date, today)
+    # no min_value / max_value → user can pick any date
 )
 
 time_start = st.sidebar.time_input("From Time", value=datetime.now().replace(hour=0, minute=0).time())
